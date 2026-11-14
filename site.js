@@ -12,12 +12,12 @@ const words = {
     factorTerrain: 'The terrain must be real.', factorTerrainBody: 'A visualisation only earns trust when its geometry, resolution and uncertainty can be traced to a source.',
     terrainLabel: 'THE TERRAIN', terrainEyebrow: 'ONE PLACE · EIGHT DAYS', terrainBody: 'Search for a shared Sun and Earth window, then see the terrain that shapes the answer across 16 × 16 km of measured topography.', terrainOpen: 'OPEN FULL 3D ANALYSIS',
     stageNote: 'INTERACTIVE 3D MODEL · DRAG TO ORBIT', stageOpen: 'OPEN FULL SCREEN',
-    compareLabel: 'THREE SITES, ONE CLOCK', compareTitle: 'The horizon<br><em>changes everything.</em>', compareBody: 'The same 193 hourly samples, tested against three measured landscapes. Each strip shows local geometric visibility. Choose a site to see the ridge behind the answer.',
+    compareLabel: 'THREE SITES, ONE CLOCK', compareTitle: 'The horizon<br><em>changes everything.</em>', compareBody: 'The same UTC samples, tested against three measured landscapes. Each strip shows local geometric visibility. Choose a site to see the ridge behind the answer.', comparePeriod: 'PERIOD · UTC',
     site07Name: '07 / PEAK NEAR SHACKLETON', site01Name: '01 / CONNECTING RIDGE', site04Name: '04 / SHACKLETON RIM', sharedHours: '/ 193 HOURLY SAMPLES', inspect3d: 'INSPECT IN 3D ↗', sunLabel: 'SUN', earthLabel: 'EARTH', bothLabel: 'BOTH',
     compareLimit: 'Hourly geometry · 8 km local horizon · not a power or communication forecast.',
     methodLabel: 'METHOD & LIMITS', sourceNote: 'SOURCES ARE PART OF THE INTERFACE', methodTitle: 'Wonder needs<br>ground truth.',
     methodBody: "The 3D scenes use NASA LOLA elevation models for Sites 01, 04 and 07; the preview shows Site04. Sun and Earth positions come from JPL Horizons for each point and UTC hour. The screen computes a local terrain horizon within 8 km.",
-    methodLimit: 'The 5 m source grid contains approximately 90% interpolated pixels; the live display samples it at 41.7 m. Surface tone and cinematic fill light help reveal shape. The hero film is generated imagery, not a map of this site.',
+    methodLimit: 'The 5 m source grid contains approximately 90% interpolated pixels. The wide 3D mesh samples it at 41.7 m; an optional 2 km detail uses the source grid. Surface tone and cinematic fill light help reveal shape. The hero film is generated imagery, not a map of this site.',
     footer: 'A working visual study by ZXC for NASA Space Apps Challenge 2026.'
   },
   ru: {
@@ -31,12 +31,12 @@ const words = {
     factorTerrain: 'Рельеф должен быть настоящим.', factorTerrainBody: 'Визуализация заслуживает доверия, когда известны источник геометрии, разрешение и ограничения данных.',
     terrainLabel: 'РЕЛЬЕФ', terrainEyebrow: 'ОДНА ТОЧКА · ВОСЕМЬ ДНЕЙ', terrainBody: 'Ищи общее окно света и видимости Земли, затем смотри на измеренном рельефе 16 × 16 км, что определило результат.', terrainOpen: 'ОТКРЫТЬ 3D-АНАЛИЗ',
     stageNote: 'ИНТЕРАКТИВНАЯ 3D-МОДЕЛЬ · ВРАЩАЙ МЫШЬЮ', stageOpen: 'НА ВЕСЬ ЭКРАН',
-    compareLabel: 'ТРИ УЧАСТКА · ОДНО ВРЕМЯ', compareTitle: 'Горизонт<br><em>меняет всё.</em>', compareBody: 'Одни и те же 193 часовых отсчёта на трёх измеренных рельефах. Полосы показывают геометрическую видимость. Выбери участок, чтобы увидеть гребень за результатом.',
+    compareLabel: 'ТРИ УЧАСТКА · ОДНО ВРЕМЯ', compareTitle: 'Горизонт<br><em>меняет всё.</em>', compareBody: 'Одни и те же часы UTC на трёх измеренных рельефах. Полосы показывают геометрическую видимость. Выбери участок, чтобы увидеть гребень за результатом.', comparePeriod: 'ПЕРИОД · UTC',
     site07Name: '07 / ПИК У ШЕКЛТОНА', site01Name: '01 / СОЕДИНЯЮЩИЙ ГРЕБЕНЬ', site04Name: '04 / КРАЙ ШЕКЛТОНА', sharedHours: '/ 193 ЧАСОВЫХ ОТСЧЁТОВ', inspect3d: 'СМОТРЕТЬ В 3D ↗', sunLabel: 'СОЛНЦЕ', earthLabel: 'ЗЕМЛЯ', bothLabel: 'ОБА',
     compareLimit: 'Часовой шаг · горизонт до 8 км · не прогноз энергии или радиосвязи.',
     methodLabel: 'МЕТОД И ГРАНИЦЫ', sourceNote: 'ИСТОЧНИКИ — ЧАСТЬ ИНТЕРФЕЙСА', methodTitle: 'Впечатлению нужна<br>опора на данные.',
     methodBody: '3D-сцены построены из моделей высот NASA LOLA для участков 01, 04 и 07; здесь показан Site04. Положения Солнца и Земли рассчитаны JPL Horizons для каждой точки и часа UTC. Экран вычисляет местный горизонт в пределах 8 км.',
-    methodLimit: 'Около 90% пикселей исходной сетки 5 м получены интерполяцией; экранная сетка имеет шаг 41,7 м. Цвет и дополнительный свет помогают прочитать форму. Видео на первом экране сгенерировано и не является картой этой площадки.',
+    methodLimit: 'Около 90% пикселей исходной сетки 5 м получены интерполяцией. Широкая 3D-сетка имеет шаг 41,7 м; дополнительная деталь 2 км использует сетку источника. Цвет и дополнительный свет помогают прочитать форму. Видео на первом экране сгенерировано и не является картой этой площадки.',
     footer: 'Рабочее визуальное исследование команды ZXC для NASA Space Apps Challenge 2026.'
   }
 };
@@ -47,6 +47,11 @@ const scienceLink = document.getElementById('science-link');
 const scienceLinkBottom = document.getElementById('science-link-bottom');
 const heroMissionLink = document.getElementById('hero-mission-link');
 const sciencePreview = document.getElementById('science-preview');
+const comparisonDaySelect = document.getElementById('comparison-day');
+const comparisonData = new Map();
+const validComparisonDays = Array.from({ length: 8 }, (_, index) => `2026-11-${String(14 + index).padStart(2, '0')}`);
+const requestedComparisonDay = new URLSearchParams(location.search).get('day');
+let comparisonDay = validComparisonDays.includes(requestedComparisonDay) ? requestedComparisonDay : 'all';
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function setLanguage(lang) {
@@ -62,15 +67,18 @@ function setLanguage(lang) {
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
   }
-  const scienceUrl = `./science/${lang === 'ru' ? '?lang=ru' : ''}`;
+  const scienceParams = new URLSearchParams();
+  if (lang === 'ru') scienceParams.set('lang', 'ru');
+  if (comparisonDay !== 'all') scienceParams.set('day', comparisonDay);
+  const scienceUrl = `./science/${scienceParams.size ? `?${scienceParams}` : ''}`;
   scienceLink.href = scienceUrl;
   scienceLinkBottom.href = scienceUrl;
-  heroMissionLink.href = `./science/?site=07&find=1${lang === 'ru' ? '&lang=ru' : ''}`;
+  heroMissionLink.href = `./science/?site=07&find=1${comparisonDay === 'all' ? '' : `&day=${comparisonDay}`}${lang === 'ru' ? '&lang=ru' : ''}`;
   for (const card of document.querySelectorAll('.site-card')) {
-    card.href = `./science/?site=${card.dataset.site}&find=1${lang === 'ru' ? '&lang=ru' : ''}`;
-    const chart = card.querySelector('.site-card-chart');
-    if (chart.dataset.count) chart.setAttribute('aria-label', `${words[lang][`site${card.dataset.site}Name`]}: ${chart.dataset.count} ${lang === 'ru' ? 'общих часовых отсчётов из 193' : 'shared hourly samples out of 193'}`);
+    card.href = `./science/?site=${card.dataset.site}&find=1${comparisonDay === 'all' ? '' : `&day=${comparisonDay}`}${lang === 'ru' ? '&lang=ru' : ''}`;
   }
+  updateComparisonOptions(lang);
+  renderComparison();
   if (sciencePreview.dataset.currentLang !== lang) {
     sciencePreview.dataset.currentLang = lang;
     sciencePreview.dataset.pendingSrc = scienceUrl;
@@ -102,6 +110,49 @@ function runsForRow(flags, y, color) {
   }
   return result;
 }
+function updateComparisonOptions(lang) {
+  const labels = [lang === 'ru' ? '14–22 НОЯ · ВСЕ ОТСЧЁТЫ' : '14–22 NOV · ALL SAMPLES', ...validComparisonDays.map(day => `${Number(day.slice(-2))} ${lang === 'ru' ? 'НОЯ' : 'NOV'} 2026`)];
+  comparisonDaySelect.replaceChildren(...['all', ...validComparisonDays].map((value, index) => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = labels[index];
+    return option;
+  }));
+  comparisonDaySelect.value = comparisonDay;
+  comparisonDaySelect.setAttribute('aria-label', lang === 'ru' ? 'Период сравнения UTC' : 'UTC comparison period');
+}
+function russianSampleWord(count) {
+  if (count % 100 >= 11 && count % 100 <= 14) return 'отсчётов';
+  if (count % 10 === 1) return 'отсчёт';
+  if (count % 10 >= 2 && count % 10 <= 4) return 'отсчёта';
+  return 'отсчётов';
+}
+function renderComparison() {
+  if (!comparisonData.size) return;
+  const lang = document.documentElement.lang;
+  const start = comparisonDay === 'all' ? 0 : (Number(comparisonDay.slice(-2)) - 14) * 24;
+  const end = comparisonDay === 'all' ? 193 : start + 24;
+  const total = end - start;
+  for (const card of document.querySelectorAll('.site-card')) {
+    const flags = comparisonData.get(card.dataset.site);
+    if (!flags) continue;
+    const sun = flags.sun.slice(start, end), earth = flags.earth.slice(start, end), both = flags.both.slice(start, end);
+    const count = both.filter(Boolean).length;
+    const chart = card.querySelector('.site-card-chart');
+    card.querySelector('[data-count]').textContent = String(count);
+    card.querySelector('.site-card-count small').textContent = lang === 'ru' ? `/ ${total} ${total === 193 ? 'ЧАСОВЫХ ОТСЧЁТОВ' : 'ЧАСОВЫХ ОТСЧЁТА'}` : `/ ${total} HOURLY SAMPLES`;
+    const russianCount = russianSampleWord(count) === 'отсчёт' ? 'общий часовой отсчёт' : `общих часовых ${russianSampleWord(count)}`;
+    chart.setAttribute('aria-label', `${words[lang][`site${card.dataset.site}Name`]}: ${count} ${lang === 'ru' ? `${russianCount} из ${total}` : `shared hourly samples out of ${total}`}`);
+    chart.innerHTML = `<svg viewBox="0 0 ${total} 30" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 3.5H${total}M0 13.5H${total}M0 23.5H${total}" stroke="#4d5758" stroke-width="7"/>${runsForRow(sun, 0, chartColors[0])}${runsForRow(earth, 10, chartColors[1])}${runsForRow(both, 20, chartColors[2])}</svg>`;
+  }
+}
+comparisonDaySelect.addEventListener('change', () => {
+  comparisonDay = comparisonDaySelect.value;
+  const params = new URLSearchParams(location.search);
+  if (comparisonDay === 'all') params.delete('day'); else params.set('day', comparisonDay);
+  history.replaceState(null, '', `${location.pathname}${params.size ? `?${params}` : ''}${location.hash}`);
+  setLanguage(document.documentElement.lang);
+});
 async function loadComparison() {
   const cards = [...document.querySelectorAll('.site-card')];
   await Promise.all(cards.map(async card => {
@@ -118,17 +169,14 @@ async function loadComparison() {
       });
       const earth = data.earth.map(sample => visibleAt(sample, data.horizon_elevation_deg));
       const both = sun.map((lit, i) => lit && earth[i]);
-      const count = both.filter(Boolean).length;
-      card.querySelector('[data-count]').textContent = String(count);
-      chart.dataset.count = String(count);
-      chart.setAttribute('aria-label', `${words[document.documentElement.lang][`site${site}Name`]}: ${count} ${document.documentElement.lang === 'ru' ? 'общих часовых отсчётов из 193' : 'shared hourly samples out of 193'}`);
-      chart.innerHTML = `<svg viewBox="0 0 193 30" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 3.5H193M0 13.5H193M0 23.5H193" stroke="#4d5758" stroke-width="7"/>${runsForRow(sun, 0, chartColors[0])}${runsForRow(earth, 10, chartColors[1])}${runsForRow(both, 20, chartColors[2])}</svg>`;
+      comparisonData.set(site, { sun, earth, both });
     } catch (error) {
       chart.textContent = document.documentElement.lang === 'ru' ? 'Данные пока недоступны' : 'Data unavailable';
       chart.setAttribute('aria-label', chart.textContent);
       console.warn(`Site ${site} comparison data:`, error);
     }
   }));
+  renderComparison();
 }
 if (comparison && 'IntersectionObserver' in window) {
   const comparisonLoad = new IntersectionObserver((entries, observer) => {

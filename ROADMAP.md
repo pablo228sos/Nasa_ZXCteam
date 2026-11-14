@@ -1,6 +1,6 @@
 # Implementation gates
 
-This repository currently demonstrates three scientifically traceable sites: Site04 has no shared Sun/Earth sample in the bundled interval, Site01 has 42 and Site07 has 95. Site switching loads independent terrain, horizon and ephemeris assets. The landing page shows all three on a synchronized 193-sample timeline computed from those assets. The science view can search one bundled UTC day or the full interval, preserving the date in comparisons and CSV exports. The next steps extend that proof into the challenge application.
+This repository currently demonstrates three scientifically traceable sites: Site04 has no shared Sun/Earth sample in the bundled interval, Site01 has 42 and Site07 has 95. Site switching loads independent terrain, horizon and ephemeris assets. The landing page compares all three on a synchronized timeline that can show the full 193 samples or any bundled UTC day. Its links preserve the day in the science view and CSV export. The next steps extend that proof into the challenge application.
 
 ## 1. Data model and site catalogue
 
@@ -23,7 +23,7 @@ This repository currently demonstrates three scientifically traceable sites: Sit
 
 ## 4. Comparison workspace
 
-- Extend the existing synchronized three-site landing summary into an interactive comparison workspace that responds to date controls, with unit labels and provenance for each site.
+- Extend the existing synchronized three-site day-filtered summary into a richer comparison workspace with unit labels and provenance for each site.
 - Let visitors open the 3D scene, inspect the horizon, and export/share a comparison with source citations.
 - Acceptance: date and site changes are reflected in all visible panels and URLs; EN/RU remains complete for both interface and explanatory text.
 
