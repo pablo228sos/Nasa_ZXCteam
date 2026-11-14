@@ -2,20 +2,27 @@ import * as THREE from 'three';
 
 const $ = (id) => document.getElementById(id);
 const query = new URLSearchParams(location.search);
-const siteId = query.get('site') === '01' ? '01' : '04';
+const siteId = ['01', '04', '07'].includes(query.get('site')) ? query.get('site') : '04';
+const compareTarget = siteId === '04' ? '07' : '04';
 let locale = query.get('lang') === 'ru' ? 'ru' : 'en';
 const siteChoice = document.createElement('label');
 siteChoice.className = 'site-choice';
 siteChoice.htmlFor = 'site-choice';
-siteChoice.innerHTML = '<span>STUDY SITE</span><select id="site-choice"><option value="04">04 / Shackleton rim</option><option value="01">01 / Connecting ridge</option></select>';
+siteChoice.innerHTML = '<span>STUDY SITE</span><select id="site-choice"><option value="04">04 / Shackleton rim</option><option value="01">01 / Connecting ridge</option><option value="07">07 / Peak near Shackleton</option></select>';
 document.querySelector('.panel-title').before(siteChoice);
 $('site-choice').value = siteId;
 const compareButton = document.createElement('button');
 compareButton.id = 'compare-site';
 compareButton.className = 'mission-secondary';
 compareButton.type = 'button';
-compareButton.textContent = siteId === '04' ? 'COMPARE WITH CONNECTING RIDGE ↗' : 'COMPARE WITH SHACKLETON RIM ↗';
+compareButton.textContent = compareTarget === '07' ? 'COMPARE WITH SHACKLETON PEAK ↗' : 'COMPARE WITH SHACKLETON RIM ↗';
 $('mission-limit').before(compareButton);
+const exportButton = document.createElement('button');
+exportButton.id = 'export-hours';
+exportButton.className = 'mission-export';
+exportButton.type = 'button';
+exportButton.textContent = 'DOWNLOAD HOURLY EVIDENCE CSV ↓';
+$('mission-limit').after(exportButton);
 const copy = {
   en: {
     sunLit: 'SUN ABOVE LOCAL TERRAIN', sunBlocked: 'SUN BLOCKED BY LOCAL TERRAIN',
@@ -45,6 +52,7 @@ function translateStatic() {
   siteChoice.querySelector('span').textContent = 'ИССЛЕДУЕМЫЙ УЧАСТОК';
   $('site-choice').options[0].textContent = '04 / Кромка Шеклтона';
   $('site-choice').options[1].textContent = '01 / Соединяющий гребень';
+  $('site-choice').options[2].textContent = '07 / Пик у Шеклтона';
   document.querySelector('.panel-title').textContent = 'Свет и видимость';
   $('mission-kicker').textContent = '01 / ОКНО МИССИИ';
   $('mission-title').textContent = 'Найди время, когда есть свет и путь к Земле.';
@@ -52,7 +60,8 @@ function translateStatic() {
   $('show-why').textContent = 'ПОКАЗАТЬ ПРИЧИНУ НА РЕЛЬЕФЕ ↗';
   $('mission-legend').innerHTML = 'СОЛНЦЕ <i></i> ЗЕМЛЯ <i></i> ОБА <i></i>';
   $('mission-limit').textContent = 'Часовые отсчёты · 14–22 ноя 2026 UTC · горизонт в пределах 8 км. Только геометрическая видимость.';
-  compareButton.textContent = siteId === '04' ? 'СРАВНИТЬ С СОЕДИНЯЮЩИМ ГРЕБНЕМ ↗' : 'СРАВНИТЬ С КРОМКОЙ ШЕКЛТОНА ↗';
+  compareButton.textContent = compareTarget === '07' ? 'СРАВНИТЬ С ПИКОМ У ШЕКЛТОНА ↗' : 'СРАВНИТЬ С КРОМКОЙ ШЕКЛТОНА ↗';
+  exportButton.textContent = 'СКАЧАТЬ ЧАСОВЫЕ ДАННЫЕ CSV ↓';
   document.querySelectorAll('.row small')[0].textContent = 'Высота Солнца';
   document.querySelectorAll('.row small')[1].textContent = 'Высота Земли';
   document.querySelectorAll('.row small')[2].textContent = 'Перепад высот';
@@ -67,14 +76,30 @@ function translateStatic() {
 translateStatic();
 function openSite(nextSite, nextLocale = locale, autoFind = false) {
   const params = new URLSearchParams();
-  if (nextSite === '01') params.set('site', '01');
+  if (nextSite === '01' || nextSite === '07') params.set('site', nextSite);
   if (nextLocale === 'ru') params.set('lang', 'ru');
   if (autoFind) params.set('find', '1');
   location.href = `${location.pathname}${params.size ? `?${params}` : ''}`;
 }
 $('language').addEventListener('click', () => openSite(siteId, locale === 'ru' ? 'en' : 'ru'));
 $('site-choice').addEventListener('change', event => openSite(event.target.value));
-compareButton.addEventListener('click', () => openSite(siteId === '04' ? '01' : '04', locale, true));
+compareButton.addEventListener('click', () => openSite(compareTarget, locale, true));
+exportButton.addEventListener('click', () => {
+  if (!data || !missionEvaluated) return;
+  const rows = [['site_id','site_lat_deg','site_lon_e_deg','observer_height_m','utc','sun_azimuth_deg','sun_elevation_deg','sun_terrain_horizon_deg','sun_above','earth_azimuth_deg','earth_elevation_deg','earth_terrain_horizon_deg','earth_above','both','dem_source','ephemeris_source']];
+  data.sun.forEach((sun, index) => {
+    const earth = data.earth[index];
+    const [sunAbove, earthAbove] = statusAt(index);
+    rows.push([siteId, data.site.lat_deg, data.site.lon_e_deg, data.site.height_m, sun[0], sun[1], sun[2], data.horizon_elevation_deg[Math.round(sun[1]) % 360], sunAbove, earth[1], earth[2], data.horizon_elevation_deg[Math.round(earth[1]) % 360], earthAbove, sunAbove && earthAbove, data.source_download_url, data.horizons_url]);
+  });
+  const blob = new Blob([rows.map(row => row.join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `luna-view-site${siteId}-hourly-2026-11-14-to-22.csv`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+});
 if (window.matchMedia('(max-width: 700px)').matches) document.querySelector('.science').classList.add('collapsed');
 function updatePanelToggle() {
   const collapsed = document.querySelector('.science').classList.contains('collapsed');
@@ -137,8 +162,8 @@ let terrain, data, surfaceColors, elevationColors, slopeColors;
 let evidenceLine, blockerMarker, blockerHalo, missionEvaluated = false, explanationActive = false;
 const focusTarget = new THREE.Vector3(0, -420, 0);
 const missionText = {
-  en: { none: 'No shared window in this interval.', found: hour => `First geometric overlap sample: ${hour}.`, detail: (sun, earth, shared, bestHour, margin) => shared ? `${shared}/193 shared samples. Largest minimum angular clearance: +${margin.toFixed(2)}° at ${bestHour}.` : `${sun}/193 sunlight samples · ${earth}/193 Earth-visible samples.`, blocked: (gap, range) => `At the selected hour, Earth is ${gap.toFixed(1)}° below the local terrain horizon. The blocking ridge is ${range} away.`, clear: (earthGap, sunGap) => `At this hour: Earth +${earthGap.toFixed(2)}°, Sun +${sunGap.toFixed(2)}° above local terrain. The smaller margin limits the overlap; this is not a verified communication or power window.`, chart: 'Hourly sunlight, Earth visibility and simultaneous visibility from 14 to 22 November 2026' },
-  ru: { none: 'В этом интервале общего окна нет.', found: hour => `Первый отсчёт с общим геометрическим окном: ${hour}.`, detail: (sun, earth, shared, bestHour, margin) => shared ? `${shared}/193 общих отсчёта. Наибольший минимальный угловой запас: +${margin.toFixed(2)}° в ${bestHour}.` : `Солнце: ${sun}/193 отсчётов · Земля: ${earth}/193 отсчётов.`, blocked: (gap, range) => `В выбранный час Земля на ${gap.toFixed(1)}° ниже местного горизонта. Закрывающий гребень — в ${range}.`, clear: (earthGap, sunGap) => `В этот час Земля на +${earthGap.toFixed(2)}°, Солнце на +${sunGap.toFixed(2)}° выше местного рельефа. Меньший запас ограничивает общее окно; это не проверенное окно связи или энергии.`, chart: 'Часовые отсчёты света, видимости Земли и общего окна 14–22 ноября 2026' }
+  en: { none: 'No shared window in this interval.', found: (start, end, count) => `Longest sampled overlap: ${start} → ${end} (${count} hourly points).`, detail: (sun, earth, shared, bestHour, margin) => shared ? `${shared}/193 shared samples. Largest minimum angular clearance: +${margin.toFixed(2)}° at ${bestHour}.` : `${sun}/193 sunlight samples · ${earth}/193 Earth-visible samples.`, blocked: (gap, range) => `At the selected hour, Earth is ${gap.toFixed(1)}° below the local terrain horizon. The blocking ridge is ${range} away.`, clear: (earthGap, sunGap) => `At this hour: Earth +${earthGap.toFixed(2)}°, Sun +${sunGap.toFixed(2)}° above local terrain. The smaller margin limits the overlap; this is not a verified communication or power window.`, chart: 'Hourly sunlight, Earth visibility and simultaneous visibility from 14 to 22 November 2026' },
+  ru: { none: 'В этом интервале общего окна нет.', found: (start, end, count) => `Самая длинная серия общих отсчётов: ${start} — ${end} (${count} точек с шагом 1 час).`, detail: (sun, earth, shared, bestHour, margin) => shared ? `${shared}/193 общих отсчёта. Наибольший минимальный угловой запас: +${margin.toFixed(2)}° в ${bestHour}.` : `Солнце: ${sun}/193 отсчётов · Земля: ${earth}/193 отсчётов.`, blocked: (gap, range) => `В выбранный час Земля на ${gap.toFixed(1)}° ниже местного горизонта. Закрывающий гребень — в ${range}.`, clear: (earthGap, sunGap) => `В этот час Земля на +${earthGap.toFixed(2)}°, Солнце на +${sunGap.toFixed(2)}° выше местного рельефа. Меньший запас ограничивает общее окно; это не проверенное окно связи или энергии.`, chart: 'Часовые отсчёты света, видимости Земли и общего окна 14–22 ноября 2026' }
 };
 const measuredNormalMap = new THREE.TextureLoader().load(`./luna_view_site${siteId}_normals.png`);
 measuredNormalMap.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
@@ -328,11 +353,17 @@ function findMissionWindow() {
   const shared = samples.map(x => x[0] && x[1]);
   const result = $('mission-result');
   result.hidden = false;
-  const firstShared = shared.findIndex(Boolean);
+  const runs = [];
+  let start = -1;
+  for (let index = 0; index <= shared.length; index++) {
+    if (shared[index] && start < 0) start = index;
+    if (!shared[index] && start >= 0) { runs.push([start, index - 1]); start = -1; }
+  }
+  const longest = runs.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]))[0];
   const [best, margin] = bestGeometricHour();
-  $('mission-summary').textContent = firstShared >= 0 ? missionText[locale].found(hourLabel(firstShared)) : missionText[locale].none;
+  $('mission-summary').textContent = longest ? missionText[locale].found(hourLabel(longest[0]), hourLabel(longest[1]), longest[1] - longest[0] + 1) : missionText[locale].none;
   $('mission-detail').textContent = missionText[locale].detail(sunlight, earth, shared.filter(Boolean).length, hourLabel(best), margin);
-  $('show-why').textContent = firstShared >= 0 ? (locale === 'ru' ? 'ПОКАЗАТЬ ЛУЧШИЙ ГЕОМЕТРИЧЕСКИЙ ЧАС ↗' : 'SHOW BEST GEOMETRIC HOUR IN 3D ↗') : (locale === 'ru' ? 'ПОКАЗАТЬ ПРИЧИНУ НА РЕЛЬЕФЕ ↗' : 'SHOW WHY ON THE TERRAIN ↗');
+  $('show-why').textContent = longest ? (locale === 'ru' ? 'ПОКАЗАТЬ ЛУЧШИЙ ГЕОМЕТРИЧЕСКИЙ ЧАС ↗' : 'SHOW BEST GEOMETRIC HOUR IN 3D ↗') : (locale === 'ru' ? 'ПОКАЗАТЬ ПРИЧИНУ НА РЕЛЬЕФЕ ↗' : 'SHOW WHY ON THE TERRAIN ↗');
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
   svg.setAttribute('viewBox', `0 0 ${samples.length} 48`);
@@ -468,19 +499,23 @@ try {
   makeTerrain(await terrainResponse.arrayBuffer());
   setMode('surface');
   updateTime();
-  const siteTitle = locale === 'ru' ? (siteId === '01' ? 'Соединяющий<span>гребень.</span>' : 'Кромка<span>Шеклтона.</span>') : (siteId === '01' ? 'Connecting<span>Ridge.</span>' : 'Shackleton<span>Rim.</span>');
+  const siteTitle = locale === 'ru' ? ({ '01': 'Соединяющий<span>гребень.</span>', '04': 'Кромка<span>Шеклтона.</span>', '07': 'Пик у<span>Шеклтона.</span>' })[siteId] : ({ '01': 'Connecting<span>Ridge.</span>', '04': 'Shackleton<span>Rim.</span>', '07': 'Peak near<span>Shackleton.</span>' })[siteId];
   document.querySelector('h1').innerHTML = siteTitle;
   document.querySelector('.intro .eyebrow').textContent = locale === 'ru' ? `ЮЖНЫЙ ПОЛЮС / УЧАСТОК ${siteId}` : `SOUTH POLAR STUDY AREA / SITE ${siteId}`;
   document.querySelector('.timeline-label').textContent = locale === 'ru' ? `ПОЛОЖЕНИЕ СОЛНЦА / УЧАСТОК ${siteId}` : `SOLAR GEOMETRY / SITE ${siteId}`;
   document.querySelectorAll('.science .row strong')[2].textContent = `${((data.height_range_m[1] - data.height_range_m[0]) / 1000).toFixed(2)} km`;
   canvas.setAttribute('aria-label', `Interactive three-dimensional terrain model of lunar Site ${siteId}`);
-  document.title = `LUNA—VIEW / ${data.site_name || (siteId === '01' ? 'Connecting ridge' : 'Shackleton rim')}`;
+  document.title = `LUNA—VIEW / ${data.site_name}`;
   $('lat').textContent = `${Math.abs(data.site.lat_deg).toFixed(4)}° S`;
   $('lon').textContent = `${data.site.lon_e_deg.toFixed(4)}° E`;
   $('alt').textContent = `+${Math.round(data.site.height_m)} m`;
   $('loading').classList.add('done');
   setTimeout(() => $('loading').remove(), 1000);
-  if (query.get('find') === '1') findMissionWindow();
+  if (query.get('find') === '1') {
+    findMissionWindow();
+    // Browser scroll restoration can override the first scroll during navigation.
+    if (window.innerWidth < 700) setTimeout(() => $('mission-result').scrollIntoView({ behavior: reduceMotion ? 'instant' : 'smooth', block: 'center' }), 400);
+  }
 } catch (error) {
   $('loading').textContent = `DATA LOAD FAILED · ${error.message}`;
   console.error(error);

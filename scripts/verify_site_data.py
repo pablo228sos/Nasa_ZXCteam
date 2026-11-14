@@ -1,4 +1,4 @@
-"""Check the bundled ephemerides and measured horizon exports for both sites."""
+"""Check the bundled ephemerides and measured horizon exports for all sites."""
 
 import json
 import math
@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 SCIENCE = Path(__file__).resolve().parents[1] / "science"
-EXPECTED = {"01": (193, 42, 42), "04": (193, 0, 0)}
+EXPECTED = {"01": (193, 42, 42), "04": (193, 0, 0), "07": (192, 95, 95)}
 
 
 def verify(site_id, expected):
@@ -53,7 +53,8 @@ def verify(site_id, expected):
     )
     assert result == expected, (site_id, result, expected)
     print(f"Site{site_id}: sunlight {result[0]}, Earth {result[1]}, both {result[2]} / 193 hours")
+    return [record[0] for record in sun]
 
 
-for site_id, expected in EXPECTED.items():
-    verify(site_id, expected)
+time_grids = [verify(site_id, expected) for site_id, expected in EXPECTED.items()]
+assert all(grid == time_grids[0] for grid in time_grids[1:])

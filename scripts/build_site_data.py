@@ -15,12 +15,13 @@ from rasterio.enums import Resampling
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'science'
 parser = argparse.ArgumentParser(description='Build a documented NASA PGDA lunar study site')
-parser.add_argument('--site', choices=('01', '04'), default='04')
+parser.add_argument('--site', choices=('01', '04', '07'), default='04')
 args = parser.parse_args()
 SITE_ID = args.site
 SITE_NAME, SITE_X, SITE_Y = {
     '01': ('Connecting ridge', -11000.0, -12000.0),
     '04': ('Shackleton rim', -1000.0, -7000.0),
+    '07': ('Peak near Shackleton', 30000.0, -20000.0),
 }[SITE_ID]
 SOURCE = ROOT / f'.cache/Site{SITE_ID}_final_adj_5mpp_surf.tif'
 SOURCE_URL = f'https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site{SITE_ID}/Site{SITE_ID}_final_adj_5mpp_surf.tif'

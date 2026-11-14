@@ -13,7 +13,7 @@ const words = {
     terrainLabel: 'THE TERRAIN', terrainEyebrow: 'ONE PLACE · EIGHT DAYS', terrainBody: 'Search for a shared Sun and Earth window, then see the terrain that shapes the answer across 16 × 16 km of measured topography.', terrainOpen: 'OPEN FULL 3D ANALYSIS',
     stageNote: 'INTERACTIVE 3D MODEL · DRAG TO ORBIT', stageOpen: 'OPEN FULL SCREEN',
     methodLabel: 'METHOD & LIMITS', sourceNote: 'SOURCES ARE PART OF THE INTERFACE', methodTitle: 'Wonder needs<br>ground truth.',
-    methodBody: "The 3D shape is built from NASA's LOLA Site04 elevation model. Sun and Earth positions come from JPL Horizons for the selected point and UTC hour. The screen computes a local terrain horizon within 8 km.",
+    methodBody: "The 3D scenes use NASA LOLA elevation models for Sites 01, 04 and 07; the preview shows Site04. Sun and Earth positions come from JPL Horizons for each point and UTC hour. The screen computes a local terrain horizon within 8 km.",
     methodLimit: 'The 5 m source grid contains approximately 90% interpolated pixels; the live display samples it at 41.7 m. Surface tone and cinematic fill light help reveal shape. The hero film is generated imagery, not a map of this site.',
     footer: 'A working visual study by ZXC for NASA Space Apps Challenge 2026.'
   },
@@ -29,7 +29,7 @@ const words = {
     terrainLabel: 'РЕЛЬЕФ', terrainEyebrow: 'ОДНА ТОЧКА · ВОСЕМЬ ДНЕЙ', terrainBody: 'Ищи общее окно света и видимости Земли, затем смотри на измеренном рельефе 16 × 16 км, что определило результат.', terrainOpen: 'ОТКРЫТЬ 3D-АНАЛИЗ',
     stageNote: 'ИНТЕРАКТИВНАЯ 3D-МОДЕЛЬ · ВРАЩАЙ МЫШЬЮ', stageOpen: 'НА ВЕСЬ ЭКРАН',
     methodLabel: 'МЕТОД И ГРАНИЦЫ', sourceNote: 'ИСТОЧНИКИ — ЧАСТЬ ИНТЕРФЕЙСА', methodTitle: 'Впечатлению нужна<br>опора на данные.',
-    methodBody: 'Форма поверхности построена из модели высот NASA LOLA Site04. Положения Солнца и Земли рассчитаны JPL Horizons для выбранной точки и часа UTC. Экран вычисляет местный горизонт в радиусе 8 км.',
+    methodBody: '3D-сцены построены из моделей высот NASA LOLA для участков 01, 04 и 07; здесь показан Site04. Положения Солнца и Земли рассчитаны JPL Horizons для каждой точки и часа UTC. Экран вычисляет местный горизонт в пределах 8 км.',
     methodLimit: 'Около 90% пикселей исходной сетки 5 м получены интерполяцией; экранная сетка имеет шаг 41,7 м. Цвет и дополнительный свет помогают прочитать форму. Видео на первом экране сгенерировано и не является картой этой площадки.',
     footer: 'Рабочее визуальное исследование команды ZXC для NASA Space Apps Challenge 2026.'
   }
@@ -59,7 +59,7 @@ function setLanguage(lang) {
   const scienceUrl = `./science/${lang === 'ru' ? '?lang=ru' : ''}`;
   scienceLink.href = scienceUrl;
   scienceLinkBottom.href = scienceUrl;
-  heroMissionLink.href = scienceUrl;
+  heroMissionLink.href = `./science/?site=07&find=1${lang === 'ru' ? '&lang=ru' : ''}`;
   if (sciencePreview.dataset.currentLang !== lang) {
     sciencePreview.dataset.currentLang = lang;
     sciencePreview.dataset.pendingSrc = scienceUrl;
