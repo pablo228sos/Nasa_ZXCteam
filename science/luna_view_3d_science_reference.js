@@ -5,12 +5,20 @@ const query = new URLSearchParams(location.search);
 const siteId = ['01', '04', '07'].includes(query.get('site')) ? query.get('site') : '04';
 const compareTarget = siteId === '04' ? '07' : '04';
 let locale = query.get('lang') === 'ru' ? 'ru' : 'en';
+let selectedDay = /^2026-11-(1[4-9]|2[01])$/.test(query.get('day') || '') ? query.get('day') : 'all';
+const selectionBounds = () => selectedDay === 'all' ? [0, 192] : [(Number(selectedDay.slice(-2)) - 14) * 24, (Number(selectedDay.slice(-2)) - 14) * 24 + 23];
 const siteChoice = document.createElement('label');
 siteChoice.className = 'site-choice';
 siteChoice.htmlFor = 'site-choice';
 siteChoice.innerHTML = '<span>STUDY SITE</span><select id="site-choice"><option value="04">04 / Shackleton rim</option><option value="01">01 / Connecting ridge</option><option value="07">07 / Peak near Shackleton</option></select>';
 document.querySelector('.panel-title').before(siteChoice);
 $('site-choice').value = siteId;
+const dayChoice = document.createElement('label');
+dayChoice.className = 'site-choice day-choice';
+dayChoice.htmlFor = 'day-choice';
+dayChoice.innerHTML = `<span>SEARCH PERIOD · UTC</span><select id="day-choice"><option value="all">14–22 NOV · ALL SAMPLES</option>${Array.from({length:8}, (_, i) => `<option value="2026-11-${String(i+14).padStart(2,'0')}">${i+14} NOV 2026</option>`).join('')}</select>`;
+siteChoice.after(dayChoice);
+$('day-choice').value = selectedDay;
 const compareButton = document.createElement('button');
 compareButton.id = 'compare-site';
 compareButton.className = 'mission-secondary';
@@ -50,6 +58,9 @@ function translateStatic() {
   for (const [node, value] of [...document.querySelectorAll('.coordinate small')].map((x,i) => [x,['ШИРОТА','ДОЛГОТА','ВЫСОТА'][i]])) node.textContent = value;
   document.querySelector('.panel-head .eyebrow').textContent = 'УСЛОВИЯ В ЭТОЙ ТОЧКЕ';
   siteChoice.querySelector('span').textContent = 'ИССЛЕДУЕМЫЙ УЧАСТОК';
+  dayChoice.querySelector('span').textContent = 'ПЕРИОД ПОИСКА · UTC';
+  $('day-choice').options[0].textContent = '14–22 НОЯ · ВСЕ ОТСЧЁТЫ';
+  for (let i = 1; i < $('day-choice').options.length; i++) $('day-choice').options[i].textContent = `${i+13} НОЯ 2026`;
   $('site-choice').options[0].textContent = '04 / Кромка Шеклтона';
   $('site-choice').options[1].textContent = '01 / Соединяющий гребень';
   $('site-choice').options[2].textContent = '07 / Пик у Шеклтона';
@@ -78,16 +89,36 @@ function openSite(nextSite, nextLocale = locale, autoFind = false) {
   const params = new URLSearchParams();
   if (nextSite === '01' || nextSite === '07') params.set('site', nextSite);
   if (nextLocale === 'ru') params.set('lang', 'ru');
+  if (selectedDay !== 'all') params.set('day', selectedDay);
   if (autoFind) params.set('find', '1');
   location.href = `${location.pathname}${params.size ? `?${params}` : ''}`;
 }
-$('language').addEventListener('click', () => openSite(siteId, locale === 'ru' ? 'en' : 'ru'));
-$('site-choice').addEventListener('change', event => openSite(event.target.value));
+$('language').addEventListener('click', () => openSite(siteId, locale === 'ru' ? 'en' : 'ru', missionEvaluated));
+$('site-choice').addEventListener('change', event => openSite(event.target.value, locale, missionEvaluated));
 compareButton.addEventListener('click', () => openSite(compareTarget, locale, true));
+$('day-choice').addEventListener('change', event => {
+  selectedDay = event.target.value;
+  const params = new URLSearchParams(location.search);
+  if (selectedDay === 'all') params.delete('day'); else params.set('day', selectedDay);
+  params.set('find', '1');
+  history.replaceState(null, '', `${location.pathname}${params.size ? `?${params}` : ''}`);
+  const [start] = selectionBounds();
+  state.time = start + 12;
+  explanationActive = false;
+  document.body.classList.remove('explaining');
+  document.querySelector('.science').classList.remove('explaining');
+  $('mission-profile').hidden = true;
+  $('evidence-callout').hidden = true;
+  if (evidenceLine) { evidenceLine.visible = false; blockerMarker.visible = false; blockerHalo.visible = false; }
+  updateSelectedRange();
+  if (data) { updateTime(); findMissionWindow(); }
+});
 exportButton.addEventListener('click', () => {
   if (!data || !missionEvaluated) return;
   const rows = [['site_id','site_lat_deg','site_lon_e_deg','observer_height_m','utc','sun_azimuth_deg','sun_elevation_deg','sun_terrain_horizon_deg','sun_above','earth_azimuth_deg','earth_elevation_deg','earth_terrain_horizon_deg','earth_above','both','dem_source','ephemeris_source']];
-  data.sun.forEach((sun, index) => {
+  const [start, end] = selectionBounds();
+  data.sun.slice(start, end + 1).forEach((sun, offset) => {
+    const index = start + offset;
     const earth = data.earth[index];
     const [sunAbove, earthAbove] = statusAt(index);
     rows.push([siteId, data.site.lat_deg, data.site.lon_e_deg, data.site.height_m, sun[0], sun[1], sun[2], data.horizon_elevation_deg[Math.round(sun[1]) % 360], sunAbove, earth[1], earth[2], data.horizon_elevation_deg[Math.round(earth[1]) % 360], earthAbove, sunAbove && earthAbove, data.source_download_url, data.horizons_url]);
@@ -96,7 +127,7 @@ exportButton.addEventListener('click', () => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `luna-view-site${siteId}-hourly-2026-11-14-to-22.csv`;
+  link.download = `luna-view-site${siteId}-hourly-${selectedDay === 'all' ? '2026-11-14-to-22' : selectedDay}.csv`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 });
@@ -156,14 +187,17 @@ stars.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
 scene.add(new THREE.Points(stars, new THREE.PointsMaterial({ color: 0xb7c5c8, size: 1.4, sizeAttenuation: false, transparent: true, opacity: 0.56, depthWrite: false })));
 
 const state = { theta: -0.8, elevation: 0.35, radius: 9600, targetTheta: -0.8, targetElevation: 0.35, targetRadius: 9600, overhead: false, interacting: false, mode: 'surface', time: 12, playing: false };
+if (selectedDay !== 'all') state.time = selectionBounds()[0] + 12;
+updateSelectedRange();
 const target = new THREE.Vector3(0, -420, 0);
 const eye = new THREE.Vector3();
 let terrain, data, surfaceColors, elevationColors, slopeColors;
 let evidenceLine, blockerMarker, blockerHalo, missionEvaluated = false, explanationActive = false;
 const focusTarget = new THREE.Vector3(0, -420, 0);
+const pluralRu = (count, one, few, many) => count % 100 >= 11 && count % 100 <= 14 ? many : count % 10 === 1 ? one : count % 10 >= 2 && count % 10 <= 4 ? few : many;
 const missionText = {
-  en: { none: 'No shared window in this interval.', found: (start, end, count) => `Longest sampled overlap: ${start} → ${end} (${count} hourly points).`, detail: (sun, earth, shared, bestHour, margin) => shared ? `${shared}/193 shared samples. Largest minimum angular clearance: +${margin.toFixed(2)}° at ${bestHour}.` : `${sun}/193 sunlight samples · ${earth}/193 Earth-visible samples.`, blocked: (gap, range) => `At the selected hour, Earth is ${gap.toFixed(1)}° below the local terrain horizon. The blocking ridge is ${range} away.`, clear: (earthGap, sunGap) => `At this hour: Earth +${earthGap.toFixed(2)}°, Sun +${sunGap.toFixed(2)}° above local terrain. The smaller margin limits the overlap; this is not a verified communication or power window.`, chart: 'Hourly sunlight, Earth visibility and simultaneous visibility from 14 to 22 November 2026' },
-  ru: { none: 'В этом интервале общего окна нет.', found: (start, end, count) => `Самая длинная серия общих отсчётов: ${start} — ${end} (${count} точек с шагом 1 час).`, detail: (sun, earth, shared, bestHour, margin) => shared ? `${shared}/193 общих отсчёта. Наибольший минимальный угловой запас: +${margin.toFixed(2)}° в ${bestHour}.` : `Солнце: ${sun}/193 отсчётов · Земля: ${earth}/193 отсчётов.`, blocked: (gap, range) => `В выбранный час Земля на ${gap.toFixed(1)}° ниже местного горизонта. Закрывающий гребень — в ${range}.`, clear: (earthGap, sunGap) => `В этот час Земля на +${earthGap.toFixed(2)}°, Солнце на +${sunGap.toFixed(2)}° выше местного рельефа. Меньший запас ограничивает общее окно; это не проверенное окно связи или энергии.`, chart: 'Часовые отсчёты света, видимости Земли и общего окна 14–22 ноября 2026' }
+  en: { none: 'No shared window in this interval.', found: (start, end, count) => `Longest sampled overlap: ${start} → ${end} (${count} hourly points).`, detail: (sun, earth, shared, bestHour, margin, total) => shared ? `${shared}/${total} shared samples. Largest minimum angular clearance: +${margin.toFixed(2)}° at ${bestHour}.` : `${sun}/${total} sunlight samples · ${earth}/${total} Earth-visible samples.`, blocked: (gap, range) => `At the selected hour, Earth is ${gap.toFixed(1)}° below the local terrain horizon. The blocking ridge is ${range} away.`, clear: (earthGap, sunGap) => `At this hour: Earth +${earthGap.toFixed(2)}°, Sun +${sunGap.toFixed(2)}° above local terrain. The smaller margin limits the overlap; this is not a verified communication or power window.`, chart: (range) => `Hourly sunlight, Earth visibility and simultaneous visibility, ${range}` },
+  ru: { none: 'В этом интервале общего окна нет.', found: (start, end, count) => `Самая длинная серия общих отсчётов: ${start} — ${end} (${count} ${pluralRu(count, 'точка', 'точки', 'точек')} с шагом 1 час).`, detail: (sun, earth, shared, bestHour, margin, total) => shared ? `${shared}/${total} общих отсчётов. Наибольший минимальный угловой запас: +${margin.toFixed(2)}° в ${bestHour}.` : `Солнце: ${sun}/${total} отсчётов · Земля: ${earth}/${total} отсчётов.`, blocked: (gap, range) => `В выбранный час Земля на ${gap.toFixed(1)}° ниже местного горизонта. Закрывающий гребень — в ${range}.`, clear: (earthGap, sunGap) => `В этот час Земля на +${earthGap.toFixed(2)}°, Солнце на +${sunGap.toFixed(2)}° выше местного рельефа. Меньший запас ограничивает общее окно; это не проверенное окно связи или энергии.`, chart: (range) => `Часовые отсчёты света, видимости Земли и общего окна, ${range}` }
 };
 const measuredNormalMap = new THREE.TextureLoader().load(`./luna_view_site${siteId}_normals.png`);
 measuredNormalMap.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
@@ -249,6 +283,17 @@ function makeTerrain(raw) {
   scene.add(pinTop);
 }
 
+function selectedRangeLabel() {
+  return selectedDay === 'all' ? (locale === 'ru' ? '14–22 ноя 2026 UTC' : '14–22 Nov 2026 UTC') : `${Number(selectedDay.slice(-2))} ${locale === 'ru' ? 'ноя' : 'Nov'} 2026 UTC`;
+}
+function updateSelectedRange() {
+  const [start, end] = selectionBounds();
+  $('time').min = start;
+  $('time').max = end;
+  const labels = selectedDay === 'all' ? ['14', '16', '18', '20', '22'].map(day => `${day} ${copy[locale].month}`) : ['00:00', '06:00', '12:00', '18:00', '23:00'];
+  document.querySelectorAll('.range-labels span').forEach((node, index) => { node.textContent = labels[index]; });
+  $('mission-limit').textContent = locale === 'ru' ? `Часовые отсчёты · ${selectedRangeLabel()} · горизонт в пределах 8 км. Только геометрическая видимость.` : `Hourly samples · ${selectedRangeLabel()} · 8 km terrain horizon. Geometric visibility only.`;
+}
 function updateTime() {
   if (!data) return;
   const index = Math.round(state.time);
@@ -265,7 +310,8 @@ function updateTime() {
   const date = new Date(Date.UTC(2026, 10, 14, index));
   $('date').textContent = `${date.getUTCDate()} ${copy[locale].month} ${date.getUTCFullYear()} · ${String(date.getUTCHours()).padStart(2,'0')}:00 UTC`;
   $('time').value = index;
-  $('time').style.setProperty('--progress', `${index / 192 * 100}%`);
+  const [rangeStart, rangeEnd] = selectionBounds();
+  $('time').style.setProperty('--progress', `${(index - rangeStart) / (rangeEnd - rangeStart) * 100}%`);
 
   const az = sun[1] * Math.PI / 180, el = sun[2] * Math.PI / 180;
   const north = data.north_xy, east = data.east_xy;
@@ -290,14 +336,16 @@ function hourLabel(index) {
 }
 
 function bestGeometricHour() {
-  let best = 0, bestMargin = -Infinity;
-  data.earth.forEach((earth, index) => {
+  const [start, end] = selectionBounds();
+  let best = start, bestMargin = -Infinity;
+  for (let index = start; index <= end; index++) {
+    const earth = data.earth[index];
     const sun = data.sun[index];
     const earthGap = earth[2] - data.horizon_elevation_deg[Math.round(earth[1]) % 360];
     const sunGap = sun[2] - data.horizon_elevation_deg[Math.round(sun[1]) % 360];
     const margin = Math.min(sunGap, earthGap);
     if (margin > bestMargin) { bestMargin = margin; best = index; }
-  });
+  }
   return [best, bestMargin];
 }
 
@@ -347,7 +395,8 @@ function updateEvidence(index) {
 
 function findMissionWindow() {
   if (!data) return;
-  const samples = data.sun.map((_, index) => statusAt(index));
+  const [rangeStart, rangeEnd] = selectionBounds();
+  const samples = Array.from({ length: rangeEnd - rangeStart + 1 }, (_, offset) => statusAt(rangeStart + offset));
   const sunlight = samples.filter(x => x[0]).length;
   const earth = samples.filter(x => x[1]).length;
   const shared = samples.map(x => x[0] && x[1]);
@@ -361,8 +410,8 @@ function findMissionWindow() {
   }
   const longest = runs.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]))[0];
   const [best, margin] = bestGeometricHour();
-  $('mission-summary').textContent = longest ? missionText[locale].found(hourLabel(longest[0]), hourLabel(longest[1]), longest[1] - longest[0] + 1) : missionText[locale].none;
-  $('mission-detail').textContent = missionText[locale].detail(sunlight, earth, shared.filter(Boolean).length, hourLabel(best), margin);
+  $('mission-summary').textContent = longest ? missionText[locale].found(hourLabel(rangeStart + longest[0]), hourLabel(rangeStart + longest[1]), longest[1] - longest[0] + 1) : missionText[locale].none;
+  $('mission-detail').textContent = missionText[locale].detail(sunlight, earth, shared.filter(Boolean).length, hourLabel(best), margin, samples.length);
   $('show-why').textContent = longest ? (locale === 'ru' ? 'ПОКАЗАТЬ ЛУЧШИЙ ГЕОМЕТРИЧЕСКИЙ ЧАС ↗' : 'SHOW BEST GEOMETRIC HOUR IN 3D ↗') : (locale === 'ru' ? 'ПОКАЗАТЬ ПРИЧИНУ НА РЕЛЬЕФЕ ↗' : 'SHOW WHY ON THE TERRAIN ↗');
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
@@ -383,10 +432,10 @@ function findMissionWindow() {
     }
   }
   $('mission-chart').replaceChildren(svg);
-  $('mission-chart').setAttribute('aria-label', missionText[locale].chart);
+  $('mission-chart').setAttribute('aria-label', missionText[locale].chart(selectedRangeLabel()));
   svg.addEventListener('pointerdown', event => {
     const bounds = svg.getBoundingClientRect();
-    state.time = clamp(Math.round((event.clientX - bounds.left) / bounds.width * (samples.length - 1)), 0, samples.length - 1);
+    state.time = rangeStart + clamp(Math.round((event.clientX - bounds.left) / bounds.width * (samples.length - 1)), 0, samples.length - 1);
     updateTime();
   });
   missionEvaluated = true;
@@ -410,6 +459,7 @@ function showWhy() {
     blockerHalo.renderOrder = 11;
     scene.add(evidenceLine, blockerMarker, blockerHalo);
   }
+  evidenceLine.visible = true; blockerMarker.visible = true; blockerHalo.visible = true;
   state.time = bestGeometricHour()[0];
   updateTime();
   const azimuth = Math.round(data.earth[Math.round(state.time)][1]) % 360;
@@ -468,7 +518,7 @@ function animate(now) {
   const dt = Math.min((now - last) / 1000, .05); last = now;
   if (state.playing) {
     playAccumulator += dt;
-    if (playAccumulator >= .34) { playAccumulator = 0; state.time = state.time >= 192 ? 0 : state.time + 1; updateTime(); }
+    if (playAccumulator >= .34) { playAccumulator = 0; const [start, end] = selectionBounds(); state.time = state.time >= end ? start : state.time + 1; updateTime(); }
   }
   if (!reduceMotion && !state.interacting && !state.overhead) state.targetTheta -= dt * .018;
   const smooth = 1 - Math.exp(-dt * 3.6);
@@ -481,7 +531,7 @@ function animate(now) {
   camera.position.copy(eye);
   camera.lookAt(target);
   if (blockerHalo) blockerHalo.quaternion.copy(camera.quaternion);
-  if (blockerMarker) {
+  if (blockerMarker && explanationActive) {
     const onScreen = blockerMarker.position.clone().project(camera);
     const callout = $('evidence-callout');
     callout.hidden = onScreen.z < -1 || onScreen.z > 1 || Math.abs(onScreen.x) > .95 || Math.abs(onScreen.y) > .9;

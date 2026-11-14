@@ -12,6 +12,9 @@ const words = {
     factorTerrain: 'The terrain must be real.', factorTerrainBody: 'A visualisation only earns trust when its geometry, resolution and uncertainty can be traced to a source.',
     terrainLabel: 'THE TERRAIN', terrainEyebrow: 'ONE PLACE · EIGHT DAYS', terrainBody: 'Search for a shared Sun and Earth window, then see the terrain that shapes the answer across 16 × 16 km of measured topography.', terrainOpen: 'OPEN FULL 3D ANALYSIS',
     stageNote: 'INTERACTIVE 3D MODEL · DRAG TO ORBIT', stageOpen: 'OPEN FULL SCREEN',
+    compareLabel: 'THREE SITES, ONE CLOCK', compareTitle: 'The horizon<br><em>changes everything.</em>', compareBody: 'The same 193 hourly samples, tested against three measured landscapes. Each strip shows local geometric visibility. Choose a site to see the ridge behind the answer.',
+    site07Name: '07 / PEAK NEAR SHACKLETON', site01Name: '01 / CONNECTING RIDGE', site04Name: '04 / SHACKLETON RIM', sharedHours: '/ 193 HOURLY SAMPLES', inspect3d: 'INSPECT IN 3D ↗', sunLabel: 'SUN', earthLabel: 'EARTH', bothLabel: 'BOTH',
+    compareLimit: 'Hourly geometry · 8 km local horizon · not a power or communication forecast.',
     methodLabel: 'METHOD & LIMITS', sourceNote: 'SOURCES ARE PART OF THE INTERFACE', methodTitle: 'Wonder needs<br>ground truth.',
     methodBody: "The 3D scenes use NASA LOLA elevation models for Sites 01, 04 and 07; the preview shows Site04. Sun and Earth positions come from JPL Horizons for each point and UTC hour. The screen computes a local terrain horizon within 8 km.",
     methodLimit: 'The 5 m source grid contains approximately 90% interpolated pixels; the live display samples it at 41.7 m. Surface tone and cinematic fill light help reveal shape. The hero film is generated imagery, not a map of this site.',
@@ -28,6 +31,9 @@ const words = {
     factorTerrain: 'Рельеф должен быть настоящим.', factorTerrainBody: 'Визуализация заслуживает доверия, когда известны источник геометрии, разрешение и ограничения данных.',
     terrainLabel: 'РЕЛЬЕФ', terrainEyebrow: 'ОДНА ТОЧКА · ВОСЕМЬ ДНЕЙ', terrainBody: 'Ищи общее окно света и видимости Земли, затем смотри на измеренном рельефе 16 × 16 км, что определило результат.', terrainOpen: 'ОТКРЫТЬ 3D-АНАЛИЗ',
     stageNote: 'ИНТЕРАКТИВНАЯ 3D-МОДЕЛЬ · ВРАЩАЙ МЫШЬЮ', stageOpen: 'НА ВЕСЬ ЭКРАН',
+    compareLabel: 'ТРИ УЧАСТКА · ОДНО ВРЕМЯ', compareTitle: 'Горизонт<br><em>меняет всё.</em>', compareBody: 'Одни и те же 193 часовых отсчёта на трёх измеренных рельефах. Полосы показывают геометрическую видимость. Выбери участок, чтобы увидеть гребень за результатом.',
+    site07Name: '07 / ПИК У ШЕКЛТОНА', site01Name: '01 / СОЕДИНЯЮЩИЙ ГРЕБЕНЬ', site04Name: '04 / КРАЙ ШЕКЛТОНА', sharedHours: '/ 193 ЧАСОВЫХ ОТСЧЁТОВ', inspect3d: 'СМОТРЕТЬ В 3D ↗', sunLabel: 'СОЛНЦЕ', earthLabel: 'ЗЕМЛЯ', bothLabel: 'ОБА',
+    compareLimit: 'Часовой шаг · горизонт до 8 км · не прогноз энергии или радиосвязи.',
     methodLabel: 'МЕТОД И ГРАНИЦЫ', sourceNote: 'ИСТОЧНИКИ — ЧАСТЬ ИНТЕРФЕЙСА', methodTitle: 'Впечатлению нужна<br>опора на данные.',
     methodBody: '3D-сцены построены из моделей высот NASA LOLA для участков 01, 04 и 07; здесь показан Site04. Положения Солнца и Земли рассчитаны JPL Horizons для каждой точки и часа UTC. Экран вычисляет местный горизонт в пределах 8 км.',
     methodLimit: 'Около 90% пикселей исходной сетки 5 м получены интерполяцией; экранная сетка имеет шаг 41,7 м. Цвет и дополнительный свет помогают прочитать форму. Видео на первом экране сгенерировано и не является картой этой площадки.',
@@ -48,7 +54,7 @@ function setLanguage(lang) {
   document.documentElement.lang = lang;
   for (const element of document.querySelectorAll('[data-i18n]')) {
     const key = element.dataset.i18n;
-    if (key === 'premiseTitle' || key === 'methodTitle') element.innerHTML = words[lang][key];
+    if (key === 'premiseTitle' || key === 'methodTitle' || key === 'compareTitle') element.innerHTML = words[lang][key];
     else element.textContent = words[lang][key];
   }
   for (const button of document.querySelectorAll('[data-lang]')) {
@@ -60,6 +66,11 @@ function setLanguage(lang) {
   scienceLink.href = scienceUrl;
   scienceLinkBottom.href = scienceUrl;
   heroMissionLink.href = `./science/?site=07&find=1${lang === 'ru' ? '&lang=ru' : ''}`;
+  for (const card of document.querySelectorAll('.site-card')) {
+    card.href = `./science/?site=${card.dataset.site}&find=1${lang === 'ru' ? '&lang=ru' : ''}`;
+    const chart = card.querySelector('.site-card-chart');
+    if (chart.dataset.count) chart.setAttribute('aria-label', `${words[lang][`site${card.dataset.site}Name`]}: ${chart.dataset.count} ${lang === 'ru' ? 'общих часовых отсчётов из 193' : 'shared hourly samples out of 193'}`);
+  }
   if (sciencePreview.dataset.currentLang !== lang) {
     sciencePreview.dataset.currentLang = lang;
     sciencePreview.dataset.pendingSrc = scienceUrl;
@@ -73,6 +84,58 @@ const requestedLanguage = new URLSearchParams(location.search).get('lang');
 let savedLanguage;
 try { savedLanguage = localStorage.getItem('luna-view-lang'); } catch { savedLanguage = null; }
 setLanguage(requestedLanguage === 'ru' || requestedLanguage === 'en' ? requestedLanguage : savedLanguage === 'ru' ? 'ru' : 'en');
+
+const comparison = document.getElementById('compare');
+const chartColors = ['#d9b47a', '#adc8cf', '#e8f2ec'];
+function visibleAt(sample, horizon) {
+  const bearing = Math.round(sample[1]) % 360;
+  return sample[2] > horizon[bearing];
+}
+function runsForRow(flags, y, color) {
+  let result = '';
+  for (let start = 0; start < flags.length;) {
+    if (!flags[start]) { start++; continue; }
+    let end = start + 1;
+    while (end < flags.length && flags[end]) end++;
+    result += `<rect x="${start}" y="${y}" width="${end-start}" height="6" fill="${color}"/>`;
+    start = end;
+  }
+  return result;
+}
+async function loadComparison() {
+  const cards = [...document.querySelectorAll('.site-card')];
+  await Promise.all(cards.map(async card => {
+    const site = card.dataset.site;
+    const chart = card.querySelector('.site-card-chart');
+    try {
+      const response = await fetch(`./science/luna_view_site${site}_data.json`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (data.site_id !== site || data.sun.length !== 193 || data.earth.length !== 193 || data.horizon_elevation_deg.length !== 360) throw new Error('Unexpected data shape');
+      const sun = data.sun.map((sample, i) => {
+        if (sample[0] !== data.earth[i][0]) throw new Error('Mismatched timestamps');
+        return visibleAt(sample, data.horizon_elevation_deg);
+      });
+      const earth = data.earth.map(sample => visibleAt(sample, data.horizon_elevation_deg));
+      const both = sun.map((lit, i) => lit && earth[i]);
+      const count = both.filter(Boolean).length;
+      card.querySelector('[data-count]').textContent = String(count);
+      chart.dataset.count = String(count);
+      chart.setAttribute('aria-label', `${words[document.documentElement.lang][`site${site}Name`]}: ${count} ${document.documentElement.lang === 'ru' ? 'общих часовых отсчётов из 193' : 'shared hourly samples out of 193'}`);
+      chart.innerHTML = `<svg viewBox="0 0 193 30" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 3.5H193M0 13.5H193M0 23.5H193" stroke="#4d5758" stroke-width="7"/>${runsForRow(sun, 0, chartColors[0])}${runsForRow(earth, 10, chartColors[1])}${runsForRow(both, 20, chartColors[2])}</svg>`;
+    } catch (error) {
+      chart.textContent = document.documentElement.lang === 'ru' ? 'Данные пока недоступны' : 'Data unavailable';
+      chart.setAttribute('aria-label', chart.textContent);
+      console.warn(`Site ${site} comparison data:`, error);
+    }
+  }));
+}
+if (comparison && 'IntersectionObserver' in window) {
+  const comparisonLoad = new IntersectionObserver((entries, observer) => {
+    if (entries[0].isIntersecting) { observer.disconnect(); loadComparison(); }
+  }, { rootMargin: '500px 0px' });
+  comparisonLoad.observe(comparison);
+} else if (comparison) loadComparison();
 
 const scienceStage = document.querySelector('.science-stage');
 let scienceVisible = false;
