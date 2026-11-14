@@ -1,0 +1,5 @@
+numpy>=1.26,<3
+rasterio>=1.4,<2
+pyproj>=3.6,<4
+Pillow>=10,<12
+requests>=2.31,<3
