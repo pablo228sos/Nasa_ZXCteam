@@ -2,6 +2,8 @@
 
 A working visual study for the NASA Space Apps Challenge 2026 Lunar Landing Site Navigator challenge. The landing page uses cinematic illustration; the linked science screen renders real 3D lunar elevation models and topocentric Sun/Earth geometry for three documented study points.
 
+**Live preview:** https://pablo228sos.github.io/Nasa_ZXCteam/ (GitHub Pages, deployed from `main`).
+
 ## Run locally
 
 From this directory:
