@@ -23,7 +23,7 @@ Open `http://localhost:8000/`. The main action opens `http://localhost:8000/scie
 - A height-error sensitivity check derived from each site's NASA PGDA **total-Z RMS uncertainty GeoTIFF**. Along every horizon ray, the screen also tests an upper horizon formed by raising ridge samples and lowering the observer by one reported RMS each. For the full interval, **Site01 18/42** and **Site07 80/95** geometric shared samples remain above that upper local horizon; Site04 has no geometric overlap. This envelope is deliberately adverse but is **not** a statistical confidence interval or a communication guarantee.
 - **Find a mission window** checks either all 193 hourly samples or one selected UTC day for simultaneous geometric sunlight and Earth visibility. The selected date is retained when switching sites and in the URL. The result reports the longest run of shared samples and identifies the hour maximizing the smaller of the Sun and Earth angular clearances. The explanation marks the measured ridge and draws the matching horizon profile. For the full interval, shared samples are **Site04 0/193, Site01 42/193, Site07 95/193**. Site07's longest sampled run is **18 Nov 02:00 through 22 Nov 00:00 UTC**; its best balanced sample is **19 Nov 10:00 UTC**, with a minimum clearance of **1.90°**. These are geometric samples, not verified continuous communication or power windows.
 - An evidence CSV download includes the selected interval's timestamps, observer coordinates, Sun/Earth angles, directional terrain horizons, visibility flags, lower/upper height-error sensitivity horizons and source URLs for the selected site. A day exports 24 rows; the full interval exports 193.
-- Source and display-resolution disclosures in the interface. The generated hero video is explicitly marked as illustration.
+- Source and display-resolution disclosures in the interface, including source links in the science panel on phones. The generated hero video is explicitly marked as illustration.
 
 ## Scientific provenance and limits
 
@@ -63,6 +63,14 @@ python scripts/verify_site_data.py
 
 This checks all three sets of 360 directional profiles against their recorded horizon maxima and blocker distances, verifies the lower/upper sensitivity horizons, hourly ephemeris spacing and aligned timestamps, and confirms the displayed site results. It checks internal consistency; it is not an independent validation of JPL Horizons or of terrain beyond the supplied tiles.
 
+For a source spot-check using the cached NASA TIFFs and fresh JPL Horizons requests:
+
+```sh
+python scripts/validate_source_spots.py
+```
+
+This independently reads each site center from the source DEM and total-Z RMS map, reprojects its coordinates, and compares one UTC hour of Sun and Earth angles against fresh Horizons responses. It does not independently validate the orbital model or all 193 hours.
+
 ## Repository map
 
 ```text
@@ -73,6 +81,7 @@ scripts/build_site_data.py         Reproducible data preparation for Sites 01, 0
 scripts/augment_horizon_blockers.py Local augmentation from the source TIFF
 scripts/verify_site_data.py        Offline data-consistency check
 scripts/augment_height_sensitivity.py  NASA total-Z RMS sensitivity envelope
+scripts/validate_source_spots.py   Source DEM and fresh JPL spot-check
 licenses/three-LICENSE.txt         License for bundled Three.js r180 modules
 ROADMAP.md                         Next implementation gates
 ITERATIONS.ru.md                   Detailed status, steps and acceptance criteria

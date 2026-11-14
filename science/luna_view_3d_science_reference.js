@@ -78,6 +78,7 @@ function translateStatic() {
   document.querySelectorAll('.row small')[2].textContent = 'Перепад высот';
   document.querySelectorAll('.row .sub')[2].textContent = 'Участок LOLA 16 × 16 км · вертикальный масштаб 1:1';
   document.querySelector('.panel-foot').textContent = 'Горизонт рассчитан в пределах 8 км. Около 90% пикселей источника LOLA с шагом 5 м интерполированы; шаг экранной сетки — 41,7 м. Цвет и дополнительный свет условны.';
+  document.querySelector('.panel-sources a:last-child').textContent = 'ОШИБКА ВЫСОТЫ ↗';
   $('hint').textContent = 'ТЯНИ, ЧТОБЫ ВРАЩАТЬ · КОЛЕСО — ПРИБЛИЖЕНИЕ';
   $('orbit').textContent = 'ОРБИТА'; $('overhead').textContent = 'СВЕРХУ';
   document.querySelector('.timeline-label').textContent = 'ПОЛОЖЕНИЕ СОЛНЦА / УЧАСТОК 04';
@@ -561,6 +562,7 @@ try {
   const [metadataResponse, terrainResponse] = await Promise.all([fetch(`./luna_view_site${siteId}_data.json`), fetch(`./luna_view_site${siteId}_terrain.bin`)]);
   if (!metadataResponse.ok || !terrainResponse.ok) throw new Error('Could not load site data');
   data = await metadataResponse.json();
+  $('height-rms-source').href = data.height_rms_source_url || data.product_url;
   makeTerrain(await terrainResponse.arrayBuffer());
   setMode('surface');
   updateTime();
