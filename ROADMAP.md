@@ -1,11 +1,11 @@
 # Implementation gates
 
-This repository currently demonstrates one scientifically traceable site. The next steps extend that proof into the challenge application.
+This repository currently demonstrates two scientifically traceable sites: Site04 has no shared Sun/Earth sample in the bundled interval, while Site01 has 42. Site switching loads independent terrain, horizon and ephemeris assets. The next steps extend that proof into the challenge application.
 
 ## 1. Data model and site catalogue
 
 - Define typed records for candidate sites, DEM footprints, source versions, coordinate frames, vertical datums and uncertainty metadata.
-- Add at least three comparable south-polar sites using authoritative DEM coverage. Each selectable site must report the exact source and effective display resolution.
+- Add at least one more comparable south-polar site using authoritative DEM coverage. Each selectable site must report the exact source and effective display resolution.
 - Acceptance: switching sites changes terrain, coordinates and provenance together; no site silently reuses Site04 values.
 
 ## 2. Geometry and validation

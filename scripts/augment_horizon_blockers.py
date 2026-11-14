@@ -1,7 +1,7 @@
 """Add measured horizon blocker distance/height to an existing Site04 export.
 
 This uses the original 5 m source tile, the same 50 m ray samples and lunar
-curvature as build_site04_data.py. It makes no network requests.
+curvature as build_site_data.py. It makes no network requests.
 """
 
 import argparse

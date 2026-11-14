@@ -1,7 +1,21 @@
 import * as THREE from 'three';
 
 const $ = (id) => document.getElementById(id);
-let locale = new URLSearchParams(location.search).get('lang') === 'ru' ? 'ru' : 'en';
+const query = new URLSearchParams(location.search);
+const siteId = query.get('site') === '01' ? '01' : '04';
+let locale = query.get('lang') === 'ru' ? 'ru' : 'en';
+const siteChoice = document.createElement('label');
+siteChoice.className = 'site-choice';
+siteChoice.htmlFor = 'site-choice';
+siteChoice.innerHTML = '<span>STUDY SITE</span><select id="site-choice"><option value="04">04 / Shackleton rim</option><option value="01">01 / Connecting ridge</option></select>';
+document.querySelector('.panel-title').before(siteChoice);
+$('site-choice').value = siteId;
+const compareButton = document.createElement('button');
+compareButton.id = 'compare-site';
+compareButton.className = 'mission-secondary';
+compareButton.type = 'button';
+compareButton.textContent = siteId === '04' ? 'COMPARE WITH CONNECTING RIDGE ↗' : 'COMPARE WITH SHACKLETON RIM ↗';
+$('mission-limit').before(compareButton);
 const copy = {
   en: {
     sunLit: 'SUN ABOVE LOCAL TERRAIN', sunBlocked: 'SUN BLOCKED BY LOCAL TERRAIN',
@@ -28,6 +42,9 @@ function translateStatic() {
   document.querySelector('.lede').textContent = 'Реальный лунный рельеф. Двигай камеру, меняй час и смотри, как свет встречает поверхность.';
   for (const [node, value] of [...document.querySelectorAll('.coordinate small')].map((x,i) => [x,['ШИРОТА','ДОЛГОТА','ВЫСОТА'][i]])) node.textContent = value;
   document.querySelector('.panel-head .eyebrow').textContent = 'УСЛОВИЯ В ЭТОЙ ТОЧКЕ';
+  siteChoice.querySelector('span').textContent = 'ИССЛЕДУЕМЫЙ УЧАСТОК';
+  $('site-choice').options[0].textContent = '04 / Кромка Шеклтона';
+  $('site-choice').options[1].textContent = '01 / Соединяющий гребень';
   document.querySelector('.panel-title').textContent = 'Свет и видимость';
   $('mission-kicker').textContent = '01 / ОКНО МИССИИ';
   $('mission-title').textContent = 'Найди время, когда есть свет и путь к Земле.';
@@ -35,6 +52,7 @@ function translateStatic() {
   $('show-why').textContent = 'ПОКАЗАТЬ ПРИЧИНУ НА РЕЛЬЕФЕ ↗';
   $('mission-legend').innerHTML = 'СОЛНЦЕ <i></i> ЗЕМЛЯ <i></i> ОБА <i></i>';
   $('mission-limit').textContent = 'Часовые отсчёты · 14–22 ноя 2026 UTC · горизонт в пределах 8 км. Только геометрическая видимость.';
+  compareButton.textContent = siteId === '04' ? 'СРАВНИТЬ С СОЕДИНЯЮЩИМ ГРЕБНЕМ ↗' : 'СРАВНИТЬ С КРОМКОЙ ШЕКЛТОНА ↗';
   document.querySelectorAll('.row small')[0].textContent = 'Высота Солнца';
   document.querySelectorAll('.row small')[1].textContent = 'Высота Земли';
   document.querySelectorAll('.row small')[2].textContent = 'Перепад высот';
@@ -47,7 +65,16 @@ function translateStatic() {
   $('photometric').textContent = 'ПОВЕРХНОСТЬ'; $('topographic').textContent = 'ВЫСОТА'; $('slope').textContent = 'УКЛОН';
 }
 translateStatic();
-$('language').addEventListener('click', () => { const next = locale === 'ru' ? 'en' : 'ru'; location.href = `${location.pathname}${next === 'ru' ? '?lang=ru' : ''}`; });
+function openSite(nextSite, nextLocale = locale, autoFind = false) {
+  const params = new URLSearchParams();
+  if (nextSite === '01') params.set('site', '01');
+  if (nextLocale === 'ru') params.set('lang', 'ru');
+  if (autoFind) params.set('find', '1');
+  location.href = `${location.pathname}${params.size ? `?${params}` : ''}`;
+}
+$('language').addEventListener('click', () => openSite(siteId, locale === 'ru' ? 'en' : 'ru'));
+$('site-choice').addEventListener('change', event => openSite(event.target.value));
+compareButton.addEventListener('click', () => openSite(siteId === '04' ? '01' : '04', locale, true));
 if (window.matchMedia('(max-width: 700px)').matches) document.querySelector('.science').classList.add('collapsed');
 function updatePanelToggle() {
   const collapsed = document.querySelector('.science').classList.contains('collapsed');
@@ -110,10 +137,10 @@ let terrain, data, surfaceColors, elevationColors, slopeColors;
 let evidenceLine, blockerMarker, blockerHalo, missionEvaluated = false, explanationActive = false;
 const focusTarget = new THREE.Vector3(0, -420, 0);
 const missionText = {
-  en: { none: 'No shared window in this interval.', found: 'A shared window is present.', detail: (sun, earth) => `${sun}/193 sunlight samples · ${earth}/193 Earth-visible samples.`, blocked: (gap, range) => `At the selected hour, Earth is ${gap.toFixed(1)}° below the local terrain horizon. The blocking ridge is ${range} away.`, clear: 'Earth clears the local terrain at this hour. Move the time slider to inspect the boundary.', chart: 'Hourly sunlight, Earth visibility and simultaneous visibility from 14 to 22 November 2026' },
-  ru: { none: 'В этом интервале общего окна нет.', found: 'В этом интервале есть общее окно.', detail: (sun, earth) => `Солнце: ${sun}/193 отсчётов · Земля: ${earth}/193 отсчётов.`, blocked: (gap, range) => `В выбранный час Земля на ${gap.toFixed(1)}° ниже местного горизонта. Закрывающий гребень — в ${range}.`, clear: 'Земля выше местного горизонта в этот час. Двигай ползунок, чтобы увидеть границу.', chart: 'Часовые отсчёты света, видимости Земли и общего окна 14–22 ноября 2026' }
+  en: { none: 'No shared window in this interval.', found: hour => `First geometric overlap sample: ${hour}.`, detail: (sun, earth, shared, bestHour, margin) => shared ? `${shared}/193 shared samples. Largest minimum angular clearance: +${margin.toFixed(2)}° at ${bestHour}.` : `${sun}/193 sunlight samples · ${earth}/193 Earth-visible samples.`, blocked: (gap, range) => `At the selected hour, Earth is ${gap.toFixed(1)}° below the local terrain horizon. The blocking ridge is ${range} away.`, clear: (earthGap, sunGap) => `At this hour: Earth +${earthGap.toFixed(2)}°, Sun +${sunGap.toFixed(2)}° above local terrain. The smaller margin limits the overlap; this is not a verified communication or power window.`, chart: 'Hourly sunlight, Earth visibility and simultaneous visibility from 14 to 22 November 2026' },
+  ru: { none: 'В этом интервале общего окна нет.', found: hour => `Первый отсчёт с общим геометрическим окном: ${hour}.`, detail: (sun, earth, shared, bestHour, margin) => shared ? `${shared}/193 общих отсчёта. Наибольший минимальный угловой запас: +${margin.toFixed(2)}° в ${bestHour}.` : `Солнце: ${sun}/193 отсчётов · Земля: ${earth}/193 отсчётов.`, blocked: (gap, range) => `В выбранный час Земля на ${gap.toFixed(1)}° ниже местного горизонта. Закрывающий гребень — в ${range}.`, clear: (earthGap, sunGap) => `В этот час Земля на +${earthGap.toFixed(2)}°, Солнце на +${sunGap.toFixed(2)}° выше местного рельефа. Меньший запас ограничивает общее окно; это не проверенное окно связи или энергии.`, chart: 'Часовые отсчёты света, видимости Земли и общего окна 14–22 ноября 2026' }
 };
-const measuredNormalMap = new THREE.TextureLoader().load('./luna_view_site04_normals.png');
+const measuredNormalMap = new THREE.TextureLoader().load(`./luna_view_site${siteId}_normals.png`);
 measuredNormalMap.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 const terrainMaterial = (mode) => new THREE.MeshStandardMaterial({
   vertexColors: true, roughness: 1, metalness: 0, side: THREE.DoubleSide,
@@ -231,6 +258,24 @@ function statusAt(index) {
   return [sun[2] > data.horizon_elevation_deg[Math.round(sun[1]) % 360], earth[2] > data.horizon_elevation_deg[Math.round(earth[1]) % 360]];
 }
 
+function hourLabel(index) {
+  const date = new Date(Date.UTC(2026, 10, 14, index));
+  const month = locale === 'ru' ? 'ноя' : 'Nov';
+  return `${date.getUTCDate()} ${month} ${String(date.getUTCHours()).padStart(2, '0')}:00 UTC`;
+}
+
+function bestGeometricHour() {
+  let best = 0, bestMargin = -Infinity;
+  data.earth.forEach((earth, index) => {
+    const sun = data.sun[index];
+    const earthGap = earth[2] - data.horizon_elevation_deg[Math.round(earth[1]) % 360];
+    const sunGap = sun[2] - data.horizon_elevation_deg[Math.round(sun[1]) % 360];
+    const margin = Math.min(sunGap, earthGap);
+    if (margin > bestMargin) { bestMargin = margin; best = index; }
+  });
+  return [best, bestMargin];
+}
+
 function renderEvidenceProfile(azimuth, earthElevation, blockerDistance) {
   const profile = data.horizon_profile_deg[azimuth];
   const lowest = Math.min(earthElevation, ...profile) - 1.5;
@@ -246,8 +291,8 @@ function renderEvidenceProfile(azimuth, earthElevation, blockerDistance) {
   const range = locale === 'ru' ? '8 КМ' : '8 KM';
   const distanceText = blockerDistance < 1000 ? `${blockerDistance.toFixed(0)} ${locale === 'ru' ? 'М' : 'M'}` : `${(blockerDistance / 1000).toFixed(1)} ${locale === 'ru' ? 'КМ' : 'KM'}`;
   const container = $('mission-profile');
-  container.setAttribute('aria-label', `${label}. ${locale === 'ru' ? 'Препятствие' : 'Blocker'} ${distanceText}, ${profile[ridge].toFixed(1)}°, ${locale === 'ru' ? 'Земля' : 'Earth'} ${earthElevation.toFixed(1)}°.`);
-  container.innerHTML = `<span>${label}</span><svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true"><path d="M ${left} ${bottom} L ${points.replaceAll(' ', ' L ')} L ${right} ${bottom} Z" fill="rgba(169,204,203,.13)"/><polyline points="${points}" fill="none" stroke="#adc8cf" stroke-width="1.5" vector-effect="non-scaling-stroke"/><line x1="${left}" y1="${rayY}" x2="${right}" y2="${rayY}" stroke="#f7d99e" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/><circle cx="${ridgeX}" cy="${ridgeY}" r="4" fill="#fff0bd"/><text x="${left}" y="95">0</text><text x="${right}" y="95" text-anchor="end">${range}</text></svg><small>${distanceText} · ${profile[ridge].toFixed(1)}° / ${earthElevation.toFixed(1)}°</small>`;
+  container.setAttribute('aria-label', `${label}. ${locale === 'ru' ? 'Гребень' : 'Ridge'} ${distanceText}, ${profile[ridge].toFixed(2)}°, ${locale === 'ru' ? 'Земля' : 'Earth'} ${earthElevation.toFixed(2)}°.`);
+  container.innerHTML = `<span>${label}</span><svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true"><path d="M ${left} ${bottom} L ${points.replaceAll(' ', ' L ')} L ${right} ${bottom} Z" fill="rgba(169,204,203,.13)"/><polyline points="${points}" fill="none" stroke="#adc8cf" stroke-width="1.5" vector-effect="non-scaling-stroke"/><line x1="${left}" y1="${rayY}" x2="${right}" y2="${rayY}" stroke="#f7d99e" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/><circle cx="${ridgeX}" cy="${ridgeY}" r="4" fill="#fff0bd"/><text x="${left}" y="95">0</text><text x="${right}" y="95" text-anchor="end">${range}</text></svg><small>${distanceText} · ${profile[ridge].toFixed(2)}° / ${earthElevation.toFixed(2)}°</small>`;
 }
 
 function updateEvidence(index) {
@@ -267,9 +312,11 @@ function updateEvidence(index) {
   blockerMarker.scale.setScalar(markerScale / 80);
   focusTarget.set(x * .48, height * .22, z * .48);
   const gap = data.horizon_elevation_deg[azimuth] - earth[2];
+  const sun = data.sun[index];
+  const sunGap = sun[2] - data.horizon_elevation_deg[Math.round(sun[1]) % 360];
   const distanceText = distance < 1000 ? `${distance.toFixed(0)} ${locale === 'ru' ? 'М' : 'M'}` : `${(distance / 1000).toFixed(1)} ${locale === 'ru' ? 'КМ' : 'KM'}`;
-  $('mission-detail').textContent = gap > 0 ? missionText[locale].blocked(gap, distanceText) : missionText[locale].clear;
-  $('evidence-callout').textContent = `${locale === 'ru' ? 'ГРЕБЕНЬ' : 'BLOCKING RIDGE'} · ${distanceText}`;
+  $('mission-detail').textContent = gap > 0 ? missionText[locale].blocked(gap, distanceText) : missionText[locale].clear(-gap, sunGap);
+  $('evidence-callout').textContent = `${gap > 0 ? (locale === 'ru' ? 'ЗАКРЫВАЮЩИЙ ГРЕБЕНЬ' : 'BLOCKING RIDGE') : (locale === 'ru' ? 'ГРЕБЕНЬ ГОРИЗОНТА' : 'HORIZON RIDGE')} · ${distanceText}`;
   renderEvidenceProfile(azimuth, earth[2], distance);
 }
 
@@ -281,8 +328,11 @@ function findMissionWindow() {
   const shared = samples.map(x => x[0] && x[1]);
   const result = $('mission-result');
   result.hidden = false;
-  $('mission-summary').textContent = shared.some(Boolean) ? missionText[locale].found : missionText[locale].none;
-  $('mission-detail').textContent = missionText[locale].detail(sunlight, earth);
+  const firstShared = shared.findIndex(Boolean);
+  const [best, margin] = bestGeometricHour();
+  $('mission-summary').textContent = firstShared >= 0 ? missionText[locale].found(hourLabel(firstShared)) : missionText[locale].none;
+  $('mission-detail').textContent = missionText[locale].detail(sunlight, earth, shared.filter(Boolean).length, hourLabel(best), margin);
+  $('show-why').textContent = firstShared >= 0 ? (locale === 'ru' ? 'ПОКАЗАТЬ ЛУЧШИЙ ГЕОМЕТРИЧЕСКИЙ ЧАС ↗' : 'SHOW BEST GEOMETRIC HOUR IN 3D ↗') : (locale === 'ru' ? 'ПОКАЗАТЬ ПРИЧИНУ НА РЕЛЬЕФЕ ↗' : 'SHOW WHY ON THE TERRAIN ↗');
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
   svg.setAttribute('viewBox', `0 0 ${samples.length} 48`);
@@ -329,15 +379,7 @@ function showWhy() {
     blockerHalo.renderOrder = 11;
     scene.add(evidenceLine, blockerMarker, blockerHalo);
   }
-  // The best Earth-clearance hour gives a reproducible explanation when no window exists.
-  if (!data.earth.some((_, index) => statusAt(index)[1])) {
-    let best = 0, bestGap = -Infinity;
-    data.earth.forEach((earth, index) => {
-      const gap = earth[2] - data.horizon_elevation_deg[Math.round(earth[1]) % 360];
-      if (gap > bestGap) { bestGap = gap; best = index; }
-    });
-    state.time = best;
-  }
+  state.time = bestGeometricHour()[0];
   updateTime();
   const azimuth = Math.round(data.earth[Math.round(state.time)][1]) % 360;
   const distance = data.horizon_distance_m[azimuth];
@@ -362,8 +404,8 @@ function setMode(mode) {
   for (const [id, value] of [['photometric','surface'],['topographic','elevation'],['slope','slope']]) $(id).classList.toggle('active', mode === value);
   $('legend').classList.toggle('visible', mode !== 'surface');
   $('legend').classList.toggle('slope', mode === 'slope');
-  $('legend-min').textContent = mode === 'slope' ? '0°' : '−2.85 KM';
-  $('legend-max').textContent = mode === 'slope' ? '≥28°' : '+1.80 KM';
+  $('legend-min').textContent = mode === 'slope' ? '0°' : `${(data.height_range_m[0] / 1000).toFixed(2)} KM`;
+  $('legend-max').textContent = mode === 'slope' ? '≥28°' : `+${(data.height_range_m[1] / 1000).toFixed(2)} KM`;
   $('mode-caption').textContent = mode === 'surface' ? copy[locale].surfaceCaption : mode === 'elevation' ? copy[locale].elevationCaption : copy[locale].slopeCaption;
 }
 
@@ -420,17 +462,25 @@ function animate(now) {
 requestAnimationFrame(animate);
 
 try {
-  const [metadataResponse, terrainResponse] = await Promise.all([fetch('./luna_view_site04_data.json'), fetch('./luna_view_site04_terrain.bin')]);
+  const [metadataResponse, terrainResponse] = await Promise.all([fetch(`./luna_view_site${siteId}_data.json`), fetch(`./luna_view_site${siteId}_terrain.bin`)]);
   if (!metadataResponse.ok || !terrainResponse.ok) throw new Error('Could not load site data');
   data = await metadataResponse.json();
   makeTerrain(await terrainResponse.arrayBuffer());
   setMode('surface');
   updateTime();
+  const siteTitle = locale === 'ru' ? (siteId === '01' ? 'Соединяющий<span>гребень.</span>' : 'Кромка<span>Шеклтона.</span>') : (siteId === '01' ? 'Connecting<span>Ridge.</span>' : 'Shackleton<span>Rim.</span>');
+  document.querySelector('h1').innerHTML = siteTitle;
+  document.querySelector('.intro .eyebrow').textContent = locale === 'ru' ? `ЮЖНЫЙ ПОЛЮС / УЧАСТОК ${siteId}` : `SOUTH POLAR STUDY AREA / SITE ${siteId}`;
+  document.querySelector('.timeline-label').textContent = locale === 'ru' ? `ПОЛОЖЕНИЕ СОЛНЦА / УЧАСТОК ${siteId}` : `SOLAR GEOMETRY / SITE ${siteId}`;
+  document.querySelectorAll('.science .row strong')[2].textContent = `${((data.height_range_m[1] - data.height_range_m[0]) / 1000).toFixed(2)} km`;
+  canvas.setAttribute('aria-label', `Interactive three-dimensional terrain model of lunar Site ${siteId}`);
+  document.title = `LUNA—VIEW / ${data.site_name || (siteId === '01' ? 'Connecting ridge' : 'Shackleton rim')}`;
   $('lat').textContent = `${Math.abs(data.site.lat_deg).toFixed(4)}° S`;
   $('lon').textContent = `${data.site.lon_e_deg.toFixed(4)}° E`;
   $('alt').textContent = `+${Math.round(data.site.height_m)} m`;
   $('loading').classList.add('done');
   setTimeout(() => $('loading').remove(), 1000);
+  if (query.get('find') === '1') findMissionWindow();
 } catch (error) {
   $('loading').textContent = `DATA LOAD FAILED · ${error.message}`;
   console.error(error);
