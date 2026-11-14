@@ -1,8 +1,24 @@
-# LUNA—VIEW / ZXC
+# LUNA—VIEW
 
-A working visual study for the NASA Space Apps Challenge 2026 Lunar Landing Site Navigator challenge. The landing page uses cinematic illustration; the linked science screen renders real 3D lunar elevation models and topocentric Sun/Earth geometry for three documented study points.
+**ZXC · [NASA Space Apps Challenge 2026 — Lunar Landing Site Navigator](https://www.spaceappschallenge.org/2026/challenges/lunar-landing-site-navigator/)**
 
-**Live preview:** https://pablo228sos.github.io/Nasa_ZXCteam/ (GitHub Pages, deployed from `main`).
+Explore three lunar south-pole study points in measured 3D terrain. Find hourly overlaps of local sunlight and Earth visibility, inspect the ridge behind the result, and export the source-linked evidence.
+
+[Open the live app](https://pablo228sos.github.io/Nasa_ZXCteam/) · [Try Site07: shared window](https://pablo228sos.github.io/Nasa_ZXCteam/science/?site=07&find=1) · [Try Site04: no shared window](https://pablo228sos.github.io/Nasa_ZXCteam/science/?site=04&find=1) · [Watch the 30-second film](media/earth-rim-loop.mp4)
+
+[![LUNA—VIEW cinematic landing screen with Earth above a lunar crater](docs/screenshots/landing.png)](https://pablo228sos.github.io/Nasa_ZXCteam/)
+
+*The opening film is generated illustration. It is not a map of a candidate site.*
+
+[![LUNA—VIEW Site07 mission-window analysis over measured 3D lunar terrain](docs/screenshots/mission-window.png)](https://pablo228sos.github.io/Nasa_ZXCteam/science/?site=07&find=1)
+
+*The science view uses NASA LOLA elevation data and JPL Horizons Sun/Earth positions. The current result tests local geometry within 8 km at hourly intervals; it is not a power or communication forecast.*
+
+## Try the mission-window flow
+
+1. Open the live app and choose a UTC day in the three-site comparison.
+2. Open a site in 3D. Links from the comparison open its result with the chosen day already selected.
+3. Open the 3D explanation to see the terrain horizon, then optionally load the 2 km detail view or download the CSV.
 
 ## Run locally
 
