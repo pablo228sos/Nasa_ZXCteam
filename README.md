@@ -20,8 +20,9 @@ Open `http://localhost:8000/`. The main action opens `http://localhost:8000/scie
 - Interactive 16 × 16 km terrain scenes at **Shackleton rim (NASA PGDA Site04)**, **Connecting ridge (Site01)** and **Peak near Shackleton (Site07)**, with drag orbit, overhead camera, zoom, surface/elevation/slope views and a UTC timeline. The site selector and one-click compare action load each site's own DEM, normal map, horizon and ephemeris.
 - Hourly apparent Sun and Earth azimuth/elevation from **JPL Horizons** for 14–22 November 2026. The light direction and readouts change with the selected hour.
 - An approximate local terrain-horizon test for the chosen point, evaluated every degree of azimuth and every 50 m out to 8 km, including lunar curvature.
+- A height-error sensitivity check derived from each site's NASA PGDA **total-Z RMS uncertainty GeoTIFF**. Along every horizon ray, the screen also tests an upper horizon formed by raising ridge samples and lowering the observer by one reported RMS each. For the full interval, **Site01 18/42** and **Site07 80/95** geometric shared samples remain above that upper local horizon; Site04 has no geometric overlap. This envelope is deliberately adverse but is **not** a statistical confidence interval or a communication guarantee.
 - **Find a mission window** checks either all 193 hourly samples or one selected UTC day for simultaneous geometric sunlight and Earth visibility. The selected date is retained when switching sites and in the URL. The result reports the longest run of shared samples and identifies the hour maximizing the smaller of the Sun and Earth angular clearances. The explanation marks the measured ridge and draws the matching horizon profile. For the full interval, shared samples are **Site04 0/193, Site01 42/193, Site07 95/193**. Site07's longest sampled run is **18 Nov 02:00 through 22 Nov 00:00 UTC**; its best balanced sample is **19 Nov 10:00 UTC**, with a minimum clearance of **1.90°**. These are geometric samples, not verified continuous communication or power windows.
-- An evidence CSV download includes the selected interval's timestamps, observer coordinates, Sun/Earth angles, directional terrain horizons, visibility flags and source URLs for the selected site. A day exports 24 rows; the full interval exports 193.
+- An evidence CSV download includes the selected interval's timestamps, observer coordinates, Sun/Earth angles, directional terrain horizons, visibility flags, lower/upper height-error sensitivity horizons and source URLs for the selected site. A day exports 24 rows; the full interval exports 193.
 - Source and display-resolution disclosures in the interface. The generated hero video is explicitly marked as illustration.
 
 ## Scientific provenance and limits
@@ -34,6 +35,7 @@ Open `http://localhost:8000/`. The main action opens `http://localhost:8000/scie
 | Observer | Site04 center: 89.766811° S, 188.130102° E, +769.68 m. Site01 center: 89.463163° S, 222.510447° E, +1944.83 m. Site07 center: 88.811008° S, 123.690068° E, +1645.25 m. Heights are bilinearly sampled at the exact center coordinates, relative to the 1737.4 km lunar reference radius. |
 | Ephemeris | [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/) topocentric observer at each site, targets Sun (10) and Earth (399), quantity 4 apparent azimuth/elevation, hourly UTC samples. Site-specific values are bundled in `science/luna_view_site01_data.json`, `science/luna_view_site04_data.json` and `science/luna_view_site07_data.json`. |
 | Horizon | Bilinear samples of this DEM along 360 radial directions, with Moon curvature correction. Each direction also records the range and height of the highest blocking ridge. The test considers relief within 8 km only; it is not a complete direct-to-Earth availability prediction. |
+| Height-error sensitivity | [NASA PGDA total-Z RMS uncertainty maps](https://pgda.gsfc.nasa.gov/products/78) for the same three 5 m grids. For each ray, lower/upper horizons come from moving the observer and each sampled terrain height by ±1 reported RMS in opposite directions, then taking the highest ray angle. This is a local input sensitivity envelope, **not** a probability, confidence interval or correction for relief beyond 8 km. The source URL and observer RMS are in each site's JSON. |
 | Editorial light and color | A fill light and procedural surface tone reveal shape. Neither is a measured reflectance product. Sun direction is ephemeris-driven. |
 | Film | `media/earth-rim-loop.mp4` was generated in Google Flow with Omni 1.2 Flash at native 720p, upscaled by Google to 1080p, then locally retimed into a 30-second seamless presentation loop. A separate 720p encode serves phones. The Earth size, crater geometry and stars are **artistic**, not a reconstruction of any study site. Earlier Gemini studies are retained in `media/` for comparison. |
 
@@ -46,9 +48,12 @@ python -m pip install -r requirements.txt
 python scripts/build_site_data.py --site 04
 python scripts/build_site_data.py --site 01
 python scripts/build_site_data.py --site 07
+python scripts/augment_height_sensitivity.py --site 04
+python scripts/augment_height_sensitivity.py --site 01
+python scripts/augment_height_sensitivity.py --site 07
 ```
 
-The script downloads the source GeoTIFF into ignored `.cache/`, queries Horizons, and writes the terrain, normal map, and ephemeris JSON in `science/`. It needs network access. The downloaded TIFF is about 41 MB.
+The build script downloads the source GeoTIFF into ignored `.cache/`, queries Horizons, and writes the terrain, normal map, and ephemeris JSON in `science/`. The second script downloads the aligned total-Z RMS GeoTIFF and adds the sensitivity envelope. Both need network access for a fresh run; each downloaded TIFF is about 41 MB. Run the sensitivity step after every rebuild of a site's JSON.
 
 Check the bundled scientific data without network access:
 
@@ -56,7 +61,7 @@ Check the bundled scientific data without network access:
 python scripts/verify_site_data.py
 ```
 
-This checks all three sets of 360 directional profiles against their recorded horizon maxima and blocker distances, verifies hourly ephemeris spacing and aligned timestamps, and confirms the displayed site results. It checks internal consistency; it is not an independent validation of JPL Horizons or of terrain beyond the supplied tiles.
+This checks all three sets of 360 directional profiles against their recorded horizon maxima and blocker distances, verifies the lower/upper sensitivity horizons, hourly ephemeris spacing and aligned timestamps, and confirms the displayed site results. It checks internal consistency; it is not an independent validation of JPL Horizons or of terrain beyond the supplied tiles.
 
 ## Repository map
 
@@ -67,6 +72,7 @@ media/                             Flow hero loop and earlier Gemini studies
 scripts/build_site_data.py         Reproducible data preparation for Sites 01, 04 and 07
 scripts/augment_horizon_blockers.py Local augmentation from the source TIFF
 scripts/verify_site_data.py        Offline data-consistency check
+scripts/augment_height_sensitivity.py  NASA total-Z RMS sensitivity envelope
 licenses/three-LICENSE.txt         License for bundled Three.js r180 modules
 ROADMAP.md                         Next implementation gates
 ITERATIONS.ru.md                   Detailed status, steps and acceptance criteria

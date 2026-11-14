@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 SCIENCE = Path(__file__).resolve().parents[1] / "science"
-EXPECTED = {"01": (193, 42, 42), "04": (193, 0, 0), "07": (192, 95, 95)}
+EXPECTED = {"01": (193, 42, 42, 18), "04": (193, 0, 0, 0), "07": (192, 95, 95, 80)}
 
 
 def verify(site_id, expected):
@@ -16,12 +16,16 @@ def verify(site_id, expected):
     data = json.loads(path.read_text(encoding="utf-8"))
     sun, earth = data["sun"], data["earth"]
     horizon = data["horizon_elevation_deg"]
+    lower = data["horizon_lower_1rms_deg"]
+    upper = data["horizon_upper_1rms_deg"]
     profiles = data["horizon_profile_deg"]
     distances = data["horizon_distance_m"]
     heights = data["horizon_height_m"]
     assert data["site_id"] == site_id
     assert len(sun) == len(earth) == 193
-    assert len(horizon) == len(profiles) == len(distances) == len(heights) == 360
+    assert len(horizon) == len(lower) == len(upper) == len(profiles) == len(distances) == len(heights) == 360
+    assert data["observer_height_rms_m"] > 0
+    assert data["height_rms_source_url"].startswith("https://pgda.gsfc.nasa.gov/")
     terrain = (SCIENCE / f"luna_view_site{site_id}_terrain.bin").read_bytes()
     assert len(terrain) == data["width"] * data["height"] * 2
     sample_heights = [item[0] for item in struct.iter_unpack("<h", terrain)]
@@ -30,6 +34,7 @@ def verify(site_id, expected):
     assert abs(high - data["height_range_m"][1]) <= 0.5
 
     for direction, profile in enumerate(profiles):
+        assert lower[direction] <= horizon[direction] <= upper[direction]
         assert 159 <= len(profile) <= 160  # Some rays meet the tile edge before 8 km.
         assert all(math.isfinite(value) and -90 < value < 90 for value in profile)
         assert abs(max(profile) - horizon[direction]) < 0.01
@@ -50,9 +55,11 @@ def verify(site_id, expected):
         sum(map(visible, sun)),
         sum(map(visible, earth)),
         sum(visible(s) and visible(e) for s, e in zip(sun, earth)),
+        sum(s[2] > upper[round(s[1]) % 360] and e[2] > upper[round(e[1]) % 360]
+            for s, e in zip(sun, earth)),
     )
     assert result == expected, (site_id, result, expected)
-    print(f"Site{site_id}: sunlight {result[0]}, Earth {result[1]}, both {result[2]} / 193 hours")
+    print(f"Site{site_id}: sunlight {result[0]}, Earth {result[1]}, both {result[2]}, above 1-RMS upper horizon {result[3]} / 193 samples")
     return [record[0] for record in sun]
 
 

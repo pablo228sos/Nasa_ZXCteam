@@ -115,13 +115,15 @@ $('day-choice').addEventListener('change', event => {
 });
 exportButton.addEventListener('click', () => {
   if (!data || !missionEvaluated) return;
-  const rows = [['site_id','site_lat_deg','site_lon_e_deg','observer_height_m','utc','sun_azimuth_deg','sun_elevation_deg','sun_terrain_horizon_deg','sun_above','earth_azimuth_deg','earth_elevation_deg','earth_terrain_horizon_deg','earth_above','both','dem_source','ephemeris_source']];
+  const rows = [['site_id','site_lat_deg','site_lon_e_deg','observer_height_m','utc','sun_azimuth_deg','sun_elevation_deg','sun_terrain_horizon_deg','sun_above','earth_azimuth_deg','earth_elevation_deg','earth_terrain_horizon_deg','earth_above','both','sun_horizon_lower_1rms_deg','sun_horizon_upper_1rms_deg','earth_horizon_lower_1rms_deg','earth_horizon_upper_1rms_deg','both_above_upper_1rms','dem_source','ephemeris_source','height_rms_source']];
   const [start, end] = selectionBounds();
   data.sun.slice(start, end + 1).forEach((sun, offset) => {
     const index = start + offset;
     const earth = data.earth[index];
     const [sunAbove, earthAbove] = statusAt(index);
-    rows.push([siteId, data.site.lat_deg, data.site.lon_e_deg, data.site.height_m, sun[0], sun[1], sun[2], data.horizon_elevation_deg[Math.round(sun[1]) % 360], sunAbove, earth[1], earth[2], data.horizon_elevation_deg[Math.round(earth[1]) % 360], earthAbove, sunAbove && earthAbove, data.source_download_url, data.horizons_url]);
+    const sunDirection = Math.round(sun[1]) % 360, earthDirection = Math.round(earth[1]) % 360;
+    const lower = data.horizon_lower_1rms_deg, upper = data.horizon_upper_1rms_deg;
+    rows.push([siteId, data.site.lat_deg, data.site.lon_e_deg, data.site.height_m, sun[0], sun[1], sun[2], data.horizon_elevation_deg[sunDirection], sunAbove, earth[1], earth[2], data.horizon_elevation_deg[earthDirection], earthAbove, sunAbove && earthAbove, lower?.[sunDirection] ?? '', upper?.[sunDirection] ?? '', lower?.[earthDirection] ?? '', upper?.[earthDirection] ?? '', upper ? sun[2] > upper[sunDirection] && earth[2] > upper[earthDirection] : '', data.source_download_url, data.horizons_url, data.height_rms_source_url ?? '']);
   });
   const blob = new Blob([rows.map(row => row.join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -411,7 +413,20 @@ function findMissionWindow() {
   const longest = runs.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]))[0];
   const [best, margin] = bestGeometricHour();
   $('mission-summary').textContent = longest ? missionText[locale].found(hourLabel(rangeStart + longest[0]), hourLabel(rangeStart + longest[1]), longest[1] - longest[0] + 1) : missionText[locale].none;
-  $('mission-detail').textContent = missionText[locale].detail(sunlight, earth, shared.filter(Boolean).length, hourLabel(best), margin, samples.length);
+  const sharedCount = shared.filter(Boolean).length;
+  $('mission-detail').textContent = missionText[locale].detail(sunlight, earth, sharedCount, hourLabel(best), margin, samples.length);
+  const sensitivity = $('mission-sensitivity');
+  const upper = data.horizon_upper_1rms_deg;
+  sensitivity.hidden = !sharedCount || !Array.isArray(upper);
+  if (!sensitivity.hidden) {
+    const beyondBand = data.sun.slice(rangeStart, rangeEnd + 1).reduce((count, sun, offset) => {
+      const earthSample = data.earth[rangeStart + offset];
+      return count + Number(sun[2] > upper[Math.round(sun[1]) % 360] && earthSample[2] > upper[Math.round(earthSample[1]) % 360]);
+    }, 0);
+    sensitivity.textContent = locale === 'ru'
+      ? `Проверка ошибки высоты: ${beyondBand} из ${sharedCount} общих отсчётов остаются выше верхней границы местного горизонта при неблагоприятном сдвиге высот на 1 RMS (NASA LOLA). Это не вероятность связи.`
+      : `Height-error sensitivity: ${beyondBand} of ${sharedCount} shared samples remain above the upper local horizon after adverse 1 RMS height shifts (NASA LOLA). This is not a communication probability.`;
+  }
   $('show-why').textContent = longest ? (locale === 'ru' ? 'ПОКАЗАТЬ ЛУЧШИЙ ГЕОМЕТРИЧЕСКИЙ ЧАС ↗' : 'SHOW BEST GEOMETRIC HOUR IN 3D ↗') : (locale === 'ru' ? 'ПОКАЗАТЬ ПРИЧИНУ НА РЕЛЬЕФЕ ↗' : 'SHOW WHY ON THE TERRAIN ↗');
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');

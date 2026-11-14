@@ -12,6 +12,7 @@ This repository currently demonstrates three scientifically traceable sites: Sit
 
 - Move the current standalone scene into reusable terrain and ephemeris modules, retaining smooth camera movement and mobile touch controls.
 - Validate projection orientation, elevation at known control points, unit scale and Sun-light azimuth against independent reference cases.
+- Extend the current NASA total-Z RMS height-error sensitivity envelope into a documented uncertainty model; do not present its adverse ±1-RMS shifts as a confidence interval.
 - Acceptance: documented spot checks reproduce the source DEM and Horizons outputs within displayed rounding; static science values never come from the generated film.
 
 ## 3. Time, solar opportunity and Earth visibility
