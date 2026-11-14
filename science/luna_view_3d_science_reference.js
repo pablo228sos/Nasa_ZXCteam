@@ -77,7 +77,7 @@ function translateStatic() {
   document.querySelectorAll('.row small')[1].textContent = 'Высота Земли';
   document.querySelectorAll('.row small')[2].textContent = 'Перепад высот';
   document.querySelectorAll('.row .sub')[2].textContent = 'Участок LOLA 16 × 16 км · вертикальный масштаб 1:1';
-  document.querySelector('.panel-foot').textContent = 'Горизонт рассчитан в пределах 8 км. Около 90% пикселей источника LOLA с шагом 5 м интерполированы; шаг экранной сетки — 41,7 м. Цвет и дополнительный свет условны.';
+  document.querySelector('.panel-foot').textContent = 'Горизонт рассчитан в пределах 8 км. Около 90% пикселей LOLA с шагом 5 м интерполированы. Широкая 3D-сетка имеет шаг 41,7 м; дополнительная деталь 2 км — 5 м. Цвет и дополнительный свет условны.';
   document.querySelector('.panel-sources a:last-child').textContent = 'ОШИБКА ВЫСОТЫ ↗';
   $('hint').textContent = 'ТЯНИ, ЧТОБЫ ВРАЩАТЬ · КОЛЕСО — ПРИБЛИЖЕНИЕ';
   $('orbit').textContent = 'ОРБИТА'; $('overhead').textContent = 'СВЕРХУ';
@@ -106,9 +106,16 @@ $('day-choice').addEventListener('change', event => {
   const [start] = selectionBounds();
   state.time = start + 12;
   explanationActive = false;
+  detailActive = false;
+  if (terrain) terrain.visible = true;
+  if (closeTerrain) closeTerrain.visible = false;
+  setSiteMarkerScale(false);
+  state.targetRadius = 9600;
+  state.targetElevation = .35;
   document.body.classList.remove('explaining');
   document.querySelector('.science').classList.remove('explaining');
   $('mission-profile').hidden = true;
+  if (detailButton) detailButton.style.display = 'none';
   $('evidence-callout').hidden = true;
   if (evidenceLine) { evidenceLine.visible = false; blockerMarker.visible = false; blockerHalo.visible = false; }
   updateSelectedRange();
@@ -194,8 +201,9 @@ if (selectedDay !== 'all') state.time = selectionBounds()[0] + 12;
 updateSelectedRange();
 const target = new THREE.Vector3(0, -420, 0);
 const eye = new THREE.Vector3();
-let terrain, data, surfaceColors, elevationColors, slopeColors;
-let evidenceLine, blockerMarker, blockerHalo, missionEvaluated = false, explanationActive = false;
+let terrain, closeTerrain, closeColors, siteMarkerParts, data, surfaceColors, elevationColors, slopeColors;
+let evidenceLine, blockerMarker, blockerHalo, detailButton, missionEvaluated = false, explanationActive = false;
+let detailActive = false;
 const focusTarget = new THREE.Vector3(0, -420, 0);
 const pluralRu = (count, one, few, many) => count % 100 >= 11 && count % 100 <= 14 ? many : count % 10 === 1 ? one : count % 10 >= 2 && count % 10 <= 4 ? few : many;
 const missionText = {
@@ -284,6 +292,61 @@ function makeTerrain(raw) {
   const pinTop = new THREE.Mesh(new THREE.SphereGeometry(15, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffe3a9 }));
   pinTop.position.y = 118;
   scene.add(pinTop);
+  siteMarkerParts = { ring, pin, pinTop };
+}
+
+function setSiteMarkerScale(close) {
+  if (!siteMarkerParts) return;
+  const { ring, pin, pinTop } = siteMarkerParts;
+  ring.scale.setScalar(close ? .16 : 1);
+  pin.scale.setScalar(close ? .15 : 1);
+  pinTop.scale.setScalar(close ? .2 : 1);
+  ring.position.y = close ? 2 : 8;
+  pin.position.y = close ? 10 : 60;
+  pinTop.position.y = close ? 20 : 118;
+}
+
+function makeCloseTerrain(raw) {
+  const n = 401, pitch = 5;
+  const heights = new Float32Array(raw);
+  if (heights.length !== n * n) throw new Error('Close terrain tile size does not match 401²');
+  const positions = new Float32Array(n * n * 3);
+  const colors = new Float32Array(n * n * 3);
+  const uvs = new Float32Array(n * n * 2);
+  const indices = new Uint32Array((n - 1) * (n - 1) * 6);
+  closeColors = { surface: colors, elevation: new Float32Array(colors.length), slope: new Float32Array(colors.length) };
+  const min = data.height_range_m[0], max = data.height_range_m[1];
+  for (let row = 0; row < n; row++) for (let col = 0; col < n; col++) {
+    const index = row * n + col, h = heights[index];
+    const x = col * pitch - 1000, z = row * pitch - 1000;
+    positions.set([x, h - data.site.height_m, z], index * 3);
+    uvs.set([(x + 8000) / 16000, 1 - (z + 8000) / 16000], index * 2);
+    const left = heights[row * n + Math.max(0, col - 1)], right = heights[row * n + Math.min(n - 1, col + 1)];
+    const top = heights[Math.max(0, row - 1) * n + col], bottom = heights[Math.min(n - 1, row + 1) * n + col];
+    const slope = Math.atan(Math.hypot((right - left) / (2 * pitch), (bottom - top) / (2 * pitch))) * 180 / Math.PI;
+    const heightNorm = clamp((h - min) / (max - min), 0, 1);
+    const shade = clamp(.44 + heightNorm * .15 - slope * .0014, .24, .67);
+    closeColors.surface.set([shade * 1.02, shade * 1.01, shade * .97], index * 3);
+    closeColors.elevation.set(gradient(heightNorm, [[0, [.05,.18,.23]], [.4,[.18,.37,.42]], [.7,[.60,.63,.58]], [1,[.94,.75,.48]]]), index * 3);
+    closeColors.slope.set(gradient(clamp(slope / 28, 0, 1), [[0,[.12,.22,.25]], [.35,[.46,.55,.52]], [.7,[.83,.56,.32]], [1,[.95,.30,.18]]]), index * 3);
+  }
+  let k = 0;
+  for (let row = 0; row < n - 1; row++) for (let col = 0; col < n - 1; col++) {
+    const a = row * n + col, b = a + 1, c = a + n, d = c + 1;
+    indices[k++] = a; indices[k++] = c; indices[k++] = b;
+    indices[k++] = b; indices[k++] = c; indices[k++] = d;
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  geometry.setAttribute('color', new THREE.BufferAttribute(closeColors.surface.slice(), 3));
+  geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+  geometry.computeVertexNormals();
+  closeTerrain = new THREE.Mesh(geometry, terrainMaterial('surface'));
+  closeTerrain.visible = false;
+  closeTerrain.castShadow = true;
+  closeTerrain.receiveShadow = true;
+  scene.add(closeTerrain);
 }
 
 function selectedRangeLabel() {
@@ -368,7 +431,7 @@ function renderEvidenceProfile(azimuth, earthElevation, blockerDistance) {
   const distanceText = blockerDistance < 1000 ? `${blockerDistance.toFixed(0)} ${locale === 'ru' ? 'М' : 'M'}` : `${(blockerDistance / 1000).toFixed(1)} ${locale === 'ru' ? 'КМ' : 'KM'}`;
   const container = $('mission-profile');
   container.setAttribute('aria-label', `${label}. ${locale === 'ru' ? 'Гребень' : 'Ridge'} ${distanceText}, ${profile[ridge].toFixed(2)}°, ${locale === 'ru' ? 'Земля' : 'Earth'} ${earthElevation.toFixed(2)}°.`);
-  container.innerHTML = `<span>${label}</span><svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true"><path d="M ${left} ${bottom} L ${points.replaceAll(' ', ' L ')} L ${right} ${bottom} Z" fill="rgba(169,204,203,.13)"/><polyline points="${points}" fill="none" stroke="#adc8cf" stroke-width="1.5" vector-effect="non-scaling-stroke"/><line x1="${left}" y1="${rayY}" x2="${right}" y2="${rayY}" stroke="#f7d99e" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/><circle cx="${ridgeX}" cy="${ridgeY}" r="4" fill="#fff0bd"/><text x="${left}" y="95">0</text><text x="${right}" y="95" text-anchor="end">${range}</text></svg><small>${distanceText} · ${profile[ridge].toFixed(2)}° / ${earthElevation.toFixed(2)}°</small>`;
+  container.innerHTML = `<span>${label}</span><svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true"><path d="M ${left} ${bottom} L ${points.replaceAll(' ', ' L ')} L ${right} ${bottom} Z" fill="rgba(169,204,203,.13)"/><polyline points="${points}" fill="none" stroke="#adc8cf" stroke-width="1.5" vector-effect="non-scaling-stroke"/><line x1="${left}" y1="${rayY}" x2="${right}" y2="${rayY}" stroke="#f7d99e" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/><circle cx="${ridgeX}" cy="${ridgeY}" r="4" fill="#fff0bd"/><text x="${left}" y="95">0</text><text x="${right}" y="95" text-anchor="end">${range}</text></svg><small>${distanceText} · ${profile[ridge].toFixed(2)}° / ${earthElevation.toFixed(2)}°</small>${detailActive ? `<small>${locale === 'ru' ? '3D-ДЕТАЛЬ 2 КМ · СЕТКА 5 М, ~90% ИНТЕРПОЛЯЦИЯ' : '2 KM 3D DETAIL · 5 M GRID, ~90% INTERPOLATED'}</small>` : ''}`;
 }
 
 function updateEvidence(index) {
@@ -380,10 +443,10 @@ function updateEvidence(index) {
   const x = distance * (data.east_xy[0] * Math.sin(az) + data.north_xy[0] * Math.cos(az));
   const z = -distance * (data.east_xy[1] * Math.sin(az) + data.north_xy[1] * Math.cos(az));
   const rayHeight = distance * Math.tan(earth[2] * Math.PI / 180) + distance * distance / (2 * 1_737_400);
-  evidenceLine.geometry.setFromPoints([new THREE.Vector3(0, 36, 0), new THREE.Vector3(x, rayHeight, z)]);
-  blockerMarker.position.set(x, height + 44, z);
+  evidenceLine.geometry.setFromPoints([new THREE.Vector3(0, detailActive ? 8 : 36, 0), new THREE.Vector3(x, rayHeight + (detailActive ? 8 : 0), z)]);
+  blockerMarker.position.set(x, height + (detailActive ? 8 : 44), z);
   blockerHalo.position.copy(blockerMarker.position);
-  const markerScale = clamp(distance * .06, window.innerWidth < 700 ? 110 : 36, 260);
+  const markerScale = detailActive ? 8 : clamp(distance * .06, window.innerWidth < 700 ? 110 : 36, 260);
   blockerHalo.scale.setScalar(markerScale / 80);
   blockerMarker.scale.setScalar(markerScale / 80);
   focusTarget.set(x * .48, height * .22, z * .48);
@@ -460,6 +523,10 @@ function findMissionWindow() {
 
 function showWhy() {
   if (!data || !missionEvaluated) return;
+  detailActive = false;
+  terrain.visible = true;
+  if (closeTerrain) closeTerrain.visible = false;
+  setSiteMarkerScale(false);
   explanationActive = true;
   $('evidence-callout').hidden = false;
   $('mission-profile').hidden = false;
@@ -477,14 +544,54 @@ function showWhy() {
   }
   evidenceLine.visible = true; blockerMarker.visible = true; blockerHalo.visible = true;
   state.time = bestGeometricHour()[0];
-  updateTime();
   const azimuth = Math.round(data.earth[Math.round(state.time)][1]) % 360;
   const distance = data.horizon_distance_m[azimuth];
+  updateTime();
   const mobile = window.matchMedia('(max-width: 700px)').matches;
   state.targetRadius = mobile ? 9600 : clamp(distance * 8, 6200, 9600);
   state.targetElevation = mobile ? .9 : .55;
   state.targetTheta = Math.atan2(-blockerMarker.position.x, -blockerMarker.position.z);
+  if (!detailButton) {
+    detailButton = document.createElement('button');
+    detailButton.id = 'detail-toggle';
+    detailButton.type = 'button';
+    detailButton.className = 'mission-secondary';
+    $('mission-profile').after(detailButton);
+    detailButton.addEventListener('click', toggleDetail);
+  }
+  detailButton.style.display = distance < 900 ? 'flex' : 'none';
+  detailButton.textContent = locale === 'ru' ? 'ПОКАЗАТЬ 3D-ДЕТАЛЬ 2 КМ ↗' : 'SHOW 2 KM 3D DETAIL ↗';
   if (mobile) window.scrollTo({ top: 0, behavior: reduceMotion ? 'instant' : 'smooth' });
+}
+
+async function toggleDetail() {
+  if (!explanationActive) return;
+  if (!closeTerrain) {
+    detailButton.disabled = true;
+    detailButton.textContent = locale === 'ru' ? 'ЗАГРУЖАЮ ДЕТАЛЬ РЕЛЬЕФА ···' : 'LOADING TERRAIN DETAIL ···';
+    try {
+      const response = await fetch(`./luna_view_site${siteId}_close.bin`);
+      if (!response.ok) throw new Error('Close terrain tile unavailable');
+      makeCloseTerrain(await response.arrayBuffer());
+      setMode(state.mode);
+    } catch (error) {
+      detailButton.textContent = locale === 'ru' ? 'ДЕТАЛЬ НЕДОСТУПНА' : 'DETAIL UNAVAILABLE';
+      console.error(error);
+      return;
+    } finally {
+      detailButton.disabled = false;
+    }
+  }
+  if (!explanationActive) return;
+  detailActive = !detailActive;
+  terrain.visible = !detailActive;
+  closeTerrain.visible = detailActive;
+  setSiteMarkerScale(detailActive);
+  updateEvidence(Math.round(state.time));
+  state.targetRadius = detailActive ? (window.innerWidth < 700 ? 900 : 950) : 7200;
+  state.targetElevation = detailActive ? .82 : .55;
+  state.targetTheta = Math.atan2(-blockerMarker.position.x, -blockerMarker.position.z) - (detailActive ? .6 : 0);
+  detailButton.textContent = detailActive ? (locale === 'ru' ? 'ВЕРНУТЬСЯ К ВИДУ 16 КМ ↗' : 'BACK TO 16 KM CONTEXT ↗') : (locale === 'ru' ? 'ПОКАЗАТЬ 3D-ДЕТАЛЬ 2 КМ ↗' : 'SHOW 2 KM 3D DETAIL ↗');
 }
 
 $('find-window').addEventListener('click', findMissionWindow);
@@ -498,6 +605,12 @@ function setMode(mode) {
   terrain.geometry.attributes.color.needsUpdate = true;
   terrain.material.dispose();
   terrain.material = terrainMaterial(mode);
+  if (closeTerrain) {
+    closeTerrain.geometry.attributes.color.array.set(closeColors[mode]);
+    closeTerrain.geometry.attributes.color.needsUpdate = true;
+    closeTerrain.material.dispose();
+    closeTerrain.material = terrainMaterial(mode);
+  }
   for (const [id, value] of [['photometric','surface'],['topographic','elevation'],['slope','slope']]) $(id).classList.toggle('active', mode === value);
   $('legend').classList.toggle('visible', mode !== 'surface');
   $('legend').classList.toggle('slope', mode === 'slope');
@@ -521,7 +634,7 @@ canvas.addEventListener('pointermove', event => {
 });
 canvas.addEventListener('pointerup', () => { pointer = null; });
 canvas.addEventListener('pointercancel', () => { pointer = null; });
-canvas.addEventListener('wheel', event => { event.preventDefault(); state.interacting = true; state.targetRadius = clamp(state.targetRadius * Math.exp(event.deltaY * .0007), 2300, 26000); $('hint').classList.add('hidden'); }, { passive: false });
+canvas.addEventListener('wheel', event => { event.preventDefault(); state.interacting = true; state.targetRadius = clamp(state.targetRadius * Math.exp(event.deltaY * .0007), detailActive ? 450 : 2300, detailActive ? 3500 : 26000); $('hint').classList.add('hidden'); }, { passive: false });
 window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setPixelRatio(preferredPixelRatio()); renderer.setSize(window.innerWidth, window.innerHeight); });
 
 let last = performance.now(), playAccumulator = 0;

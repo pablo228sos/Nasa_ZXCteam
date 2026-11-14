@@ -21,7 +21,7 @@ Open `http://localhost:8000/`. The main action opens `http://localhost:8000/scie
 - Hourly apparent Sun and Earth azimuth/elevation from **JPL Horizons** for 14–22 November 2026. The light direction and readouts change with the selected hour.
 - An approximate local terrain-horizon test for the chosen point, evaluated every degree of azimuth and every 50 m out to 8 km, including lunar curvature.
 - A height-error sensitivity check derived from each site's NASA PGDA **total-Z RMS uncertainty GeoTIFF**. Along every horizon ray, the screen also tests an upper horizon formed by raising ridge samples and lowering the observer by one reported RMS each. For the full interval, **Site01 18/42** and **Site07 80/95** geometric shared samples remain above that upper local horizon; Site04 has no geometric overlap. This envelope is deliberately adverse but is **not** a statistical confidence interval or a communication guarantee.
-- **Find a mission window** checks either all 193 hourly samples or one selected UTC day for simultaneous geometric sunlight and Earth visibility. The selected date is retained when switching sites and in the URL. The result reports the longest run of shared samples and identifies the hour maximizing the smaller of the Sun and Earth angular clearances. The explanation marks the measured ridge and draws the matching horizon profile. For the full interval, shared samples are **Site04 0/193, Site01 42/193, Site07 95/193**. Site07's longest sampled run is **18 Nov 02:00 through 22 Nov 00:00 UTC**; its best balanced sample is **19 Nov 10:00 UTC**, with a minimum clearance of **1.90°**. These are geometric samples, not verified continuous communication or power windows.
+- **Find a mission window** checks either all 193 hourly samples or one selected UTC day for simultaneous geometric sunlight and Earth visibility. The selected date is retained when switching sites and in the URL. The result reports the longest run of shared samples and identifies the hour maximizing the smaller of the Sun and Earth angular clearances. The explanation marks the measured ridge and draws the matching horizon profile. An optional 2 × 2 km close-up loads a separate 401 × 401 mesh from the same NASA TIFF only when requested; its 5 m grid does not imply 5 m independent measurement accuracy. For the full interval, shared samples are **Site04 0/193, Site01 42/193, Site07 95/193**. Site07's longest sampled run is **18 Nov 02:00 through 22 Nov 00:00 UTC**; its best balanced sample is **19 Nov 10:00 UTC**, with a minimum clearance of **1.90°**. These are geometric samples, not verified continuous communication or power windows.
 - An evidence CSV download includes the selected interval's timestamps, observer coordinates, Sun/Earth angles, directional terrain horizons, visibility flags, lower/upper height-error sensitivity horizons and source URLs for the selected site. A day exports 24 rows; the full interval exports 193.
 - Source and display-resolution disclosures in the interface, including source links in the science panel on phones. The generated hero video is explicitly marked as illustration.
 
@@ -30,7 +30,7 @@ Open `http://localhost:8000/`. The main action opens `http://localhost:8000/scie
 | Item | Current implementation |
 | --- | --- |
 | Terrain | [NASA PGDA high-resolution LOLA south-pole DEMs, Sites 01, 04 and 07](https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/). Projected polar stereographic grid; source sample pitch 5 m. |
-| Display geometry | The 3D mesh is 384 × 384 samples (41.7 m pitch) derived from the 5 m source. A separate 2048² normal map retains finer height variation from that same source; it is not an independent measurement. Height is shown at 1:1 scale. |
+| Display geometry | The wide 3D mesh is 384 × 384 samples (41.7 m pitch) derived from the 5 m source. The optional close-up is a 2 × 2 km, 401 × 401 mesh sampled directly from that source at 5 m pitch. A separate 2048² normal map retains finer height variation; it is not an independent measurement. Height is shown at 1:1 scale. |
 | Source uncertainty | [PGDA reports that roughly 90% of the 5 m pixels are interpolated](https://pgda.gsfc.nasa.gov/products/78). A 5 m grid is not 5 m independent measurement resolution. |
 | Observer | Site04 center: 89.766811° S, 188.130102° E, +769.68 m. Site01 center: 89.463163° S, 222.510447° E, +1944.83 m. Site07 center: 88.811008° S, 123.690068° E, +1645.25 m. Heights are bilinearly sampled at the exact center coordinates, relative to the 1737.4 km lunar reference radius. |
 | Ephemeris | [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/) topocentric observer at each site, targets Sun (10) and Earth (399), quantity 4 apparent azimuth/elevation, hourly UTC samples. Site-specific values are bundled in `science/luna_view_site01_data.json`, `science/luna_view_site04_data.json` and `science/luna_view_site07_data.json`. |
@@ -51,9 +51,10 @@ python scripts/build_site_data.py --site 07
 python scripts/augment_height_sensitivity.py --site 04
 python scripts/augment_height_sensitivity.py --site 01
 python scripts/augment_height_sensitivity.py --site 07
+python scripts/build_close_detail.py
 ```
 
-The build script downloads the source GeoTIFF into ignored `.cache/`, queries Horizons, and writes the terrain, normal map, and ephemeris JSON in `science/`. The second script downloads the aligned total-Z RMS GeoTIFF and adds the sensitivity envelope. Both need network access for a fresh run; each downloaded TIFF is about 41 MB. Run the sensitivity step after every rebuild of a site's JSON.
+The build script downloads the source GeoTIFF into ignored `.cache/`, queries Horizons, and writes the terrain, normal map, and ephemeris JSON in `science/`. The sensitivity script downloads the aligned total-Z RMS GeoTIFF and adds the uncertainty envelope. The close-detail script samples a separate 2 km tile from each cached source DEM. A fresh data build needs network access; each downloaded TIFF is about 41 MB. Run the sensitivity and close-detail steps after rebuilding a site's JSON.
 
 Check the bundled scientific data without network access:
 
@@ -82,6 +83,7 @@ scripts/augment_horizon_blockers.py Local augmentation from the source TIFF
 scripts/verify_site_data.py        Offline data-consistency check
 scripts/augment_height_sensitivity.py  NASA total-Z RMS sensitivity envelope
 scripts/validate_source_spots.py   Source DEM and fresh JPL spot-check
+scripts/build_close_detail.py       Optional 2 km mesh from the cached source DEM
 licenses/three-LICENSE.txt         License for bundled Three.js r180 modules
 ROADMAP.md                         Next implementation gates
 ITERATIONS.ru.md                   Detailed status, steps and acceptance criteria
