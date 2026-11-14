@@ -5,12 +5,12 @@ const words = {
     navWhy: 'THE QUESTION', navExplore: 'EXPLORE', navMethod: 'METHOD',
     heroKicker: 'ZXC / LUNAR EXPLORATION STUDY', heroLine1: 'The Moon is a place.', heroLine2: 'Choose precisely.',
     heroDeck: 'Explore terrain that exists, light that moves, and the horizon that defines what a landing site can do.',
-    heroExplore: 'EXPLORE THE TERRAIN', heroScience: 'SEE THE SCIENCE ↓', filmNotice: 'CINEMATIC ILLUSTRATION · NOT SURVEY DATA', scroll: 'SCROLL TO EXPLORE',
+    heroExplore: 'FIND A MISSION WINDOW', heroScience: 'SEE THE SCIENCE ↓', filmNotice: 'CINEMATIC ILLUSTRATION · NOT SURVEY DATA', scroll: 'SCROLL TO EXPLORE',
     question: 'THE QUESTION', premiseTitle: 'Coordinates are only<br>the beginning.', premiseBody: 'At the lunar south pole, a few kilometres can change sunlight and the path back to Earth. A useful site analysis has to connect terrain with time.',
     factorSun: 'Light meets the local horizon.', factorSunBody: 'Solar elevation alone is not enough. Nearby ridges decide when the surface actually receives light.',
     factorEarth: 'Earth has a horizon too.', factorEarthBody: 'Direct communication depends on whether Earth clears the terrain around a specific site.',
     factorTerrain: 'The terrain must be real.', factorTerrainBody: 'A visualisation only earns trust when its geometry, resolution and uncertainty can be traced to a source.',
-    terrainLabel: 'THE TERRAIN', terrainEyebrow: 'ONE PLACE · EIGHT DAYS', terrainBody: 'Move through 16 × 16 km of measured topography. Change the hour to see where the Sun and Earth stand against the local terrain.', terrainOpen: 'OPEN FULL 3D ANALYSIS',
+    terrainLabel: 'THE TERRAIN', terrainEyebrow: 'ONE PLACE · EIGHT DAYS', terrainBody: 'Search for a shared Sun and Earth window, then see the terrain that shapes the answer across 16 × 16 km of measured topography.', terrainOpen: 'OPEN FULL 3D ANALYSIS',
     stageNote: 'INTERACTIVE 3D MODEL · DRAG TO ORBIT', stageOpen: 'OPEN FULL SCREEN',
     methodLabel: 'METHOD & LIMITS', sourceNote: 'SOURCES ARE PART OF THE INTERFACE', methodTitle: 'Wonder needs<br>ground truth.',
     methodBody: "The 3D shape is built from NASA's LOLA Site04 elevation model. Sun and Earth positions come from JPL Horizons for the selected point and UTC hour. The screen computes a local terrain horizon within 8 km.",
@@ -21,12 +21,12 @@ const words = {
     navWhy: 'ВОПРОС', navExplore: 'ИССЛЕДОВАТЬ', navMethod: 'МЕТОД',
     heroKicker: 'ZXC / ИССЛЕДОВАНИЕ ЛУНЫ', heroLine1: 'Луна — это место.', heroLine2: 'Выбирай точно.',
     heroDeck: 'Изучай реальный рельеф, движение света и линию горизонта, от которой зависят возможности площадки.',
-    heroExplore: 'ИССЛЕДОВАТЬ РЕЛЬЕФ', heroScience: 'КАК ЭТО РАБОТАЕТ ↓', filmNotice: 'КИНЕМАТОГРАФИЧНАЯ ИЛЛЮСТРАЦИЯ · НЕ КАРТА', scroll: 'ЛИСТАЙ ВНИЗ',
+    heroExplore: 'НАЙТИ ОКНО МИССИИ', heroScience: 'КАК ЭТО РАБОТАЕТ ↓', filmNotice: 'КИНЕМАТОГРАФИЧНАЯ ИЛЛЮСТРАЦИЯ · НЕ КАРТА', scroll: 'ЛИСТАЙ ВНИЗ',
     question: 'ЗАДАЧА', premiseTitle: 'Координаты — только<br>начало.', premiseBody: 'У южного полюса Луны несколько километров могут изменить освещённость и связь с Землёй. Анализ площадки должен связывать рельеф со временем.',
     factorSun: 'Свет зависит от горизонта.', factorSunBody: 'Одной высоты Солнца недостаточно. Соседние хребты определяют, когда поверхность действительно освещена.',
     factorEarth: 'У Земли тоже есть горизонт.', factorEarthBody: 'Прямая связь зависит от того, видна ли Земля над рельефом вокруг конкретной точки.',
     factorTerrain: 'Рельеф должен быть настоящим.', factorTerrainBody: 'Визуализация заслуживает доверия, когда известны источник геометрии, разрешение и ограничения данных.',
-    terrainLabel: 'РЕЛЬЕФ', terrainEyebrow: 'ОДНА ТОЧКА · ВОСЕМЬ ДНЕЙ', terrainBody: 'Пройди по 16 × 16 км рельефа, построенного из измерений. Изменяй час и смотри, где находятся Солнце и Земля относительно местного горизонта.', terrainOpen: 'ОТКРЫТЬ 3D-АНАЛИЗ',
+    terrainLabel: 'РЕЛЬЕФ', terrainEyebrow: 'ОДНА ТОЧКА · ВОСЕМЬ ДНЕЙ', terrainBody: 'Ищи общее окно света и видимости Земли, затем смотри на измеренном рельефе 16 × 16 км, что определило результат.', terrainOpen: 'ОТКРЫТЬ 3D-АНАЛИЗ',
     stageNote: 'ИНТЕРАКТИВНАЯ 3D-МОДЕЛЬ · ВРАЩАЙ МЫШЬЮ', stageOpen: 'НА ВЕСЬ ЭКРАН',
     methodLabel: 'МЕТОД И ГРАНИЦЫ', sourceNote: 'ИСТОЧНИКИ — ЧАСТЬ ИНТЕРФЕЙСА', methodTitle: 'Впечатлению нужна<br>опора на данные.',
     methodBody: 'Форма поверхности построена из модели высот NASA LOLA Site04. Положения Солнца и Земли рассчитаны JPL Horizons для выбранной точки и часа UTC. Экран вычисляет местный горизонт в радиусе 8 км.',
@@ -39,6 +39,7 @@ const header = document.getElementById('site-header');
 const heroVideo = document.getElementById('hero-video');
 const scienceLink = document.getElementById('science-link');
 const scienceLinkBottom = document.getElementById('science-link-bottom');
+const heroMissionLink = document.getElementById('hero-mission-link');
 const sciencePreview = document.getElementById('science-preview');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -58,6 +59,7 @@ function setLanguage(lang) {
   const scienceUrl = `./science/${lang === 'ru' ? '?lang=ru' : ''}`;
   scienceLink.href = scienceUrl;
   scienceLinkBottom.href = scienceUrl;
+  heroMissionLink.href = scienceUrl;
   if (sciencePreview.dataset.currentLang !== lang) {
     sciencePreview.dataset.currentLang = lang;
     sciencePreview.dataset.pendingSrc = scienceUrl;

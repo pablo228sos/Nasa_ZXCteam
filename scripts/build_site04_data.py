@@ -78,6 +78,9 @@ with rasterio.open(SOURCE) as ds:
     # It is limited to 8 km and cannot rule out farther relief.
     full = ds.read(1)
     horizon = []
+    horizon_distance = []
+    horizon_height = []
+    horizon_profiles = []
     distances = np.arange(50.0, 8001.0, 50.0)
     for az in range(360):
         angle = math.radians(az)
@@ -101,7 +104,11 @@ with rasterio.open(SOURCE) as ds:
         )
         curvature = ranges * ranges / (2 * 1_737_400.0)
         slope = np.arctan2(heights - center_height - curvature, ranges)
-        horizon.append(round(float(np.degrees(np.max(slope))), 3))
+        blocker = int(np.argmax(slope))
+        horizon.append(round(float(np.degrees(slope[blocker])), 3))
+        horizon_distance.append(float(ranges[blocker]))
+        horizon_height.append(float(heights[blocker]))
+        horizon_profiles.append(np.round(np.degrees(slope), 2).tolist())
 
     # Signed 16-bit metres; the original 5 m pixels are retained in provenance,
     # while this screen mesh has an approximately 42 m display sample pitch.
@@ -124,6 +131,9 @@ with rasterio.open(SOURCE) as ds:
         'height_range_m': [float(np.min(dem)), float(np.max(dem))],
         'north_xy': north.tolist(), 'east_xy': east.tolist(),
         'horizon_elevation_deg': horizon,
+        'horizon_distance_m': horizon_distance,
+        'horizon_height_m': horizon_height,
+        'horizon_profile_deg': horizon_profiles,
         'horizon_range_m': 8000,
         'horizons_url': 'https://ssd-api.jpl.nasa.gov/doc/horizons.html',
         'sun': horizons(10, lon, lat, center_height / 1000),
