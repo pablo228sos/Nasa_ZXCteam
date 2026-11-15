@@ -1,7 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "test:ui": "node scripts/smoke-ui.cjs"
+    "test:ui": "node scripts/smoke-ui.cjs",
+    "test:probe": "node scripts/verify_coordinate_probe.mjs",
+    "test:probe-ui": "node scripts/smoke-probe.cjs"
   },
   "devDependencies": {
     "playwright-core": "1.65.1"

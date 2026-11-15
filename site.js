@@ -10,14 +10,14 @@ const words = {
     factorSun: 'Light meets the local horizon.', factorSunBody: 'Solar elevation alone is not enough. Nearby ridges decide when the surface actually receives light.',
     factorEarth: 'Earth has a horizon too.', factorEarthBody: 'Direct communication depends on whether Earth clears the terrain around a specific site.',
     factorTerrain: 'The terrain must be real.', factorTerrainBody: 'A visualisation only earns trust when its geometry, resolution and uncertainty can be traced to a source.',
-    terrainLabel: 'THE TERRAIN', terrainEyebrow: 'ONE PLACE · EIGHT DAYS', terrainBody: 'Search for a shared Sun and Earth window, then see the terrain that shapes the answer across 16 × 16 km of measured topography.', terrainOpen: 'OPEN FULL 3D ANALYSIS',
+    terrainLabel: 'THE TERRAIN', terrainEyebrow: 'ONE LANDSCAPE · YOUR POINT', terrainBody: 'Find a moment with light and a path to Earth. Then move the study point: enter coordinates or choose nearby terrain in 3D and see how the answer changes.', terrainOpen: 'OPEN FULL 3D ANALYSIS',
     stageNote: 'MEASURED 3D TERRAIN · OPEN TO EXPLORE', stageOpen: 'OPEN FULL SCREEN', previewOpen: 'EXPLORE THE MEASURED TERRAIN',
     compareLabel: 'THREE SITES, ONE CLOCK', compareTitle: 'The horizon<br><em>changes everything.</em>', compareBody: 'The same UTC samples, tested against three measured landscapes. Each strip shows local geometric visibility. Choose a site to see the ridge behind the answer.', comparePeriod: 'PERIOD · UTC',
     site07Name: '07 / PEAK NEAR SHACKLETON', site01Name: '01 / CONNECTING RIDGE', site04Name: '04 / SHACKLETON RIM', sharedHours: '/ 193 HOURLY SAMPLES', inspect3d: 'INSPECT IN 3D ↗', sunLabel: 'SUN', earthLabel: 'EARTH', bothLabel: 'BOTH',
     compareLimit: 'Hourly geometry · 8 km local horizon · not a power or communication forecast.',
     methodLabel: 'METHOD & LIMITS', sourceNote: 'SOURCES ARE PART OF THE INTERFACE', methodTitle: 'Wonder needs<br>ground truth.',
-    methodBody: "The 3D scenes use NASA LOLA elevation models for Sites 01, 04 and 07; the preview shows Site04. Sun and Earth positions come from JPL Horizons for each point and UTC hour. The screen computes a local terrain horizon within 8 km.",
-    methodLimit: 'The 5 m source grid contains approximately 90% interpolated pixels. The wide 3D mesh samples it at 41.7 m; an optional 2 km detail uses the source grid. Surface tone and cinematic fill light help reveal shape. The hero film is generated imagery, not a map of this site.',
+    methodBody: 'The 3D scenes use NASA LOLA elevation models for Sites 01, 04 and 07; the preview shows Site04. The reference points use bundled JPL Horizons Sun and Earth positions. For a point you choose nearby, the app resamples the 5 m LOLA grid and rotates those directions into its local sky.',
+    methodLimit: 'The reference horizon reaches 8 km; a moved point uses a complete 6 km horizon inside the source tile. Roughly 90% of the 5 m grid is interpolated. The wide 3D mesh samples at 41.7 m. Surface tone and fill light reveal shape; the hero film is generated illustration, not a map.',
     footer: 'A working visual study by ZXC for NASA Space Apps Challenge 2026.'
   },
   ru: {
@@ -29,14 +29,14 @@ const words = {
     factorSun: 'Свет зависит от горизонта.', factorSunBody: 'Одной высоты Солнца недостаточно. Соседние хребты определяют, когда поверхность действительно освещена.',
     factorEarth: 'У Земли тоже есть горизонт.', factorEarthBody: 'Прямая связь зависит от того, видна ли Земля над рельефом вокруг конкретной точки.',
     factorTerrain: 'Рельеф должен быть настоящим.', factorTerrainBody: 'Визуализация заслуживает доверия, когда известны источник геометрии, разрешение и ограничения данных.',
-    terrainLabel: 'РЕЛЬЕФ', terrainEyebrow: 'ОДНА ТОЧКА · ВОСЕМЬ ДНЕЙ', terrainBody: 'Ищи общее окно света и видимости Земли, затем смотри на измеренном рельефе 16 × 16 км, что определило результат.', terrainOpen: 'ОТКРЫТЬ 3D-АНАЛИЗ',
+    terrainLabel: 'РЕЛЬЕФ', terrainEyebrow: 'ОДИН РЕЛЬЕФ · ТВОЯ ТОЧКА', terrainBody: 'Найди час, когда есть свет и путь к Земле. Затем перемести точку: введи координаты или выбери место на 3D-рельефе и посмотри, как изменится ответ.', terrainOpen: 'ОТКРЫТЬ 3D-АНАЛИЗ',
     stageNote: 'ИЗМЕРЕННЫЙ 3D-РЕЛЬЕФ · ОТКРОЙ ДЛЯ ИССЛЕДОВАНИЯ', stageOpen: 'НА ВЕСЬ ЭКРАН', previewOpen: 'ИССЛЕДОВАТЬ ИЗМЕРЕННЫЙ РЕЛЬЕФ',
     compareLabel: 'ТРИ УЧАСТКА · ОДНО ВРЕМЯ', compareTitle: 'Горизонт<br><em>меняет всё.</em>', compareBody: 'Одни и те же часы UTC на трёх измеренных рельефах. Полосы показывают геометрическую видимость. Выбери участок, чтобы увидеть гребень за результатом.', comparePeriod: 'ПЕРИОД · UTC',
     site07Name: '07 / ПИК У ШЕКЛТОНА', site01Name: '01 / СОЕДИНЯЮЩИЙ ГРЕБЕНЬ', site04Name: '04 / КРАЙ ШЕКЛТОНА', sharedHours: '/ 193 ЧАСОВЫХ ОТСЧЁТОВ', inspect3d: 'СМОТРЕТЬ В 3D ↗', sunLabel: 'СОЛНЦЕ', earthLabel: 'ЗЕМЛЯ', bothLabel: 'ОБА',
     compareLimit: 'Часовой шаг · горизонт до 8 км · не прогноз энергии или радиосвязи.',
     methodLabel: 'МЕТОД И ГРАНИЦЫ', sourceNote: 'ИСТОЧНИКИ — ЧАСТЬ ИНТЕРФЕЙСА', methodTitle: 'Впечатлению нужна<br>опора на данные.',
-    methodBody: '3D-сцены построены из моделей высот NASA LOLA для участков 01, 04 и 07; здесь показан Site04. Положения Солнца и Земли рассчитаны JPL Horizons для каждой точки и часа UTC. Экран вычисляет местный горизонт в пределах 8 км.',
-    methodLimit: 'Около 90% пикселей исходной сетки 5 м получены интерполяцией. Широкая 3D-сетка имеет шаг 41,7 м; дополнительная деталь 2 км использует сетку источника. Цвет и дополнительный свет помогают прочитать форму. Видео на первом экране сгенерировано и не является картой этой площадки.',
+    methodBody: '3D-сцены построены из моделей высот NASA LOLA для участков 01, 04 и 07; здесь показан Site04. Для опорных точек загружены положения Солнца и Земли JPL Horizons. Для выбранной рядом точки приложение заново считывает 5-метровый рельеф и переводит эти направления в её локальное небо.',
+    methodLimit: 'Горизонт опорной точки охватывает 8 км, сдвинутой — 6 км внутри исходного участка. Около 90% пикселей сетки 5 м интерполированы. Широкая 3D-сетка имеет шаг 41,7 м. Цвет помогает прочитать форму; видео на первом экране — иллюстрация, не карта.',
     footer: 'Рабочее визуальное исследование команды ZXC для NASA Space Apps Challenge 2026.'
   }
 };

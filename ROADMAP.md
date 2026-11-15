@@ -1,6 +1,6 @@
 # Implementation gates
 
-This repository currently demonstrates three scientifically traceable sites: Site04 has no shared Sun/Earth sample in the bundled interval, Site01 has 42 and Site07 has 95. Site switching loads independent terrain, horizon and ephemeris assets. The landing page compares all three on a synchronized timeline that can show the full 193 samples or any bundled UTC day. Its links preserve the day in the science view and CSV export. The next steps extend that proof into the challenge application.
+This repository demonstrates three scientifically traceable reference sites: Site04 has no shared Sun/Earth sample in the bundled interval, Site01 has 42 and Site07 has 95. Site switching loads independent terrain, horizon and ephemeris assets. Visitors can move the observer within roughly 2 km of each center; the browser resamples NASA 5 m height and total-Z RMS grids and recalculates a complete 6 km local horizon. The landing page compares the three reference centers on a synchronized timeline that can show the full 193 samples or any bundled UTC day. Its links preserve the day in the science view and CSV export. The next steps expand coverage and operational meaning.
 
 ## 1. Data model and site catalogue
 
@@ -12,6 +12,7 @@ This repository currently demonstrates three scientifically traceable sites: Sit
 
 - Move the current standalone scene into reusable terrain and ephemeris modules, retaining smooth camera movement and mobile touch controls.
 - Validate projection orientation, elevation at known control points, unit scale and Sun-light azimuth against independent reference cases.
+- The movable-point projection and direction transform have source checks; broaden these to more coordinates, times and locations, and test differences near a visibility threshold before claiming precise window boundaries.
 - Extend the current NASA total-Z RMS height-error sensitivity envelope into a documented uncertainty model; do not present its adverse ±1-RMS shifts as a confidence interval.
 - Acceptance: documented spot checks reproduce the source DEM and Horizons outputs within displayed rounding; static science values never come from the generated film.
 
@@ -23,7 +24,7 @@ This repository currently demonstrates three scientifically traceable sites: Sit
 
 ## 4. Comparison workspace
 
-- Extend the existing synchronized three-site day-filtered summary into a richer comparison workspace with unit labels and provenance for each site.
+- Extend the existing synchronized three-site day-filtered summary and movable-point comparison into a richer workspace with unit labels and provenance for each site.
 - Let visitors open the 3D scene, inspect the horizon, and export/share a comparison with source citations.
 - Acceptance: date and site changes are reflected in all visible panels and URLs; EN/RU remains complete for both interface and explanatory text.
 

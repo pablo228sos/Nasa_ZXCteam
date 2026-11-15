@@ -37,7 +37,10 @@ def horizons(target, lon, lat, height_km):
         'STEP_SIZE': '1 h', 'QUANTITIES': '4', 'CSV_FORMAT': 'YES',
         'ANG_FORMAT': 'DEG', 'EXTRA_PREC': 'YES',
     }
-    response = requests.get('https://ssd.jpl.nasa.gov/api/horizons.api', params=params, timeout=90)
+    response = requests.get(
+        'https://ssd.jpl.nasa.gov/api/horizons.api', params=params, timeout=90,
+        headers={'User-Agent': 'LUNA-VIEW/0.2 (+https://github.com/pablo228sos/Nasa_ZXCteam/issues)'},
+    )
     response.raise_for_status()
     result = response.json()['result']
     if '$$SOE' not in result or '$$EOE' not in result:

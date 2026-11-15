@@ -5,7 +5,7 @@ const path = require('node:path');
 const { chromium } = require('playwright-core');
 
 const root = path.resolve(__dirname, '..');
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.bin': 'application/octet-stream', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp4': 'video/mp4' };
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.bin': 'application/octet-stream', '.gz': 'application/gzip', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp4': 'video/mp4' };
 const server = http.createServer(async (request, response) => {
   const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
   const file = path.resolve(root, `.${pathname}`, pathname.endsWith('/') ? 'index.html' : '');
