@@ -1,6 +1,8 @@
 <div align="center">
 
-![Interactive NASA-sourced lunar globe and site selector](docs/screenshots/lunar-atlas-desktop.png)
+<img src="docs/brand/lunar-orbit-cover.png" alt="Concept artwork: cratered lunar limb with distant Earth" width="100%" />
+
+<sub>Concept artwork · the measured application and its sources are shown below</sub>
 
 # LUNA—VIEW
 
@@ -30,20 +32,22 @@ Where on the lunar south pole can a surface mission see sunlight and Earth at th
 
 LUNA—VIEW lets a visitor move a study point, test a time interval, and trace the result back to a ridge on measured terrain. The visual scene and numerical result are connected: selecting a different location changes the local horizon, the Sun/Earth timeline, the highlighted blocker, and the downloadable evidence.
 
-This repository is an **independent ZXC project** developed for the NASA Space Apps Challenge 2026. NASA and JPL provide cited scientific data; they do not endorse this application. The README cover now shows the actual browser atlas built from NASA lunar maps. The opening film is generated illustration, never terrain data or a reconstruction of a study site.
+This repository is an **independent ZXC project** developed for the NASA Space Apps Challenge 2026. NASA and JPL provide cited scientific data; they do not endorse this application. The README cover is generated concept artwork. The screenshots below show the actual browser application built with NASA lunar maps. The opening film is generated illustration, never terrain data or a reconstruction of a study site.
 
 ## See it in action
 
 <table>
   <tr>
-    <td width="50%"><a href="https://pablo228sos.github.io/Nasa_ZXCteam/#terrain"><img src="docs/screenshots/lunar-atlas-mobile.png" alt="Interactive Moon atlas on a phone" /></a></td>
-    <td width="50%"><a href="https://pablo228sos.github.io/Nasa_ZXCteam/science/?site=07&amp;find=1"><img src="docs/screenshots/probe-point.png" alt="Moved study point and recalculated mission geometry" /></a></td>
+    <td width="50%"><a href="https://pablo228sos.github.io/Nasa_ZXCteam/#terrain"><img src="docs/screenshots/lunar-atlas-frame.png" alt="Interactive NASA-sourced Moon atlas and site selector" width="100%" /></a></td>
+    <td width="50%"><a href="https://pablo228sos.github.io/Nasa_ZXCteam/science/?site=07&amp;find=1"><img src="docs/screenshots/mission-window.png" alt="Measured 3D terrain and sampled Sun-Earth mission window" width="100%" /></a></td>
   </tr>
   <tr>
     <td><b>Explore.</b> Rotate the NASA-sourced Moon, visit four named landmarks, or open one of three studied regions with a single selection.</td>
     <td><b>Investigate.</b> Move a point in 3D or enter coordinates and see the evidence change.</td>
   </tr>
 </table>
+
+[Mobile atlas screenshot](docs/screenshots/lunar-atlas-mobile.png) · [Moved-point evidence screenshot](docs/screenshots/probe-point.png)
 
 | Start here | What to try |
 | --- | --- |

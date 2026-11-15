@@ -12,6 +12,7 @@ const path = require('node:path');
       await page.locator('#atlas-stage').scrollIntoViewIfNeeded();
       await page.locator('#atlas-stage.is-ready').waitFor({ timeout: 30000 });
       if (name === 'desktop') await page.waitForFunction(() => document.querySelector('#atlas-stage')?.dataset.quality === '4k', undefined, { timeout: 30000 });
+      if (name === 'desktop') await page.locator('.atlas-frame').screenshot({ path: path.resolve(__dirname, '../docs/screenshots/lunar-atlas-frame.png') });
       await page.addStyleTag({ content: '.site-header { display: none !important }' });
       await page.waitForTimeout(500);
       await page.locator('#terrain').screenshot({ path: path.resolve(__dirname, `../docs/screenshots/lunar-atlas-${name}.png`) });
