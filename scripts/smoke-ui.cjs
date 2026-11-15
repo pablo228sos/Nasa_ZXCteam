@@ -24,7 +24,7 @@ const server = http.createServer(async (request, response) => {
     browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-gl=angle', '--use-angle=swiftshader'] });
     for (const width of [390, 768, 1440]) {
       const page = await browser.newPage({ viewport: { width, height: 850 }, reducedMotion: 'reduce' });
-      await page.goto(`${base}/science/?site=07&find=1`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${base}/science/?site=07&find=1${width === 1440 ? '&day=2026-11-19' : ''}`, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => !document.querySelector('#loading') || document.querySelector('#loading').classList.contains('done'), undefined, { timeout: 30000 });
       await page.locator('#mission-result').waitFor({ state: 'visible' });
       const layout = await page.evaluate(() => {
@@ -36,8 +36,21 @@ const server = http.createServer(async (request, response) => {
       assert.ok(layout.panelBottom <= layout.dockTop + 1, `${width}px: panel overlaps controls`);
       assert.equal(await page.locator('#find-window').getAttribute('aria-pressed'), 'true');
       if (width === 1440) {
+        const pointerTargets = await page.evaluate(() => ['site-choice', 'day-choice'].map(id => {
+          const rect = document.getElementById(id).getBoundingClientRect();
+          return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)?.id;
+        }));
+        assert.deepEqual(pointerTargets, ['site-choice', 'day-choice'], 'The selectors do not receive pointer input');
         const cta = await page.evaluate(() => ({ buttonBottom: document.querySelector('#show-why').getBoundingClientRect().bottom, panelBottom: document.querySelector('.science').getBoundingClientRect().bottom }));
         assert.ok(cta.buttonBottom <= cta.panelBottom, '3D explanation action is hidden below the panel fold');
+        await page.locator('#day-choice').click();
+        await page.keyboard.press('Escape');
+        await page.locator('.science .panel-title').hover();
+        await page.mouse.wheel(0, 520);
+        await page.waitForFunction(() => document.querySelector('.science').scrollTop > 0);
+        const beforeHour = await page.locator('#time').inputValue();
+        await page.locator('#mission-chart svg').click({ position: { x: 150, y: 20 } });
+        assert.notEqual(await page.locator('#time').inputValue(), beforeHour, 'Clicking the visibility chart did not change UTC hour');
       }
       for (const id of ['topographic', 'slope', 'photometric']) {
         await page.locator(`#${id}`).click({ timeout: 12000 });
@@ -63,6 +76,8 @@ const server = http.createServer(async (request, response) => {
         await page.locator('#language').click();
         await page.waitForURL(/lang=ru/);
         assert.equal(await page.locator('html').getAttribute('lang'), 'ru');
+        await page.locator('#back-home').click();
+        await page.waitForURL(`${base}/`);
       }
       console.log(`Science ${width}px: controls, state, layout OK`);
       await page.close();

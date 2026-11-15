@@ -51,6 +51,7 @@ function translateStatic() {
   document.documentElement.lang = locale;
   $('language').textContent = locale === 'ru' ? 'EN' : 'RU';
   if (locale !== 'ru') return;
+  $('back-home').textContent = '← САЙТ';
   document.querySelector('.top-center span:first-child').textContent = 'НАУКА / 3D-СЦЕНА';
   document.querySelector('.top-center span:last-child').textContent = '01 — АНАЛИЗ ТОЧКИ';
   document.querySelector('.data-tag').textContent = 'РЕЛЬЕФ LOLA · ИСТОЧНИК 5 М';
