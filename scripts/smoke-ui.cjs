@@ -45,6 +45,12 @@ const server = http.createServer(async (request, response) => {
       }
       await page.locator('#show-why').click({ timeout: 12000 });
       assert.equal(await page.locator('#show-why').getAttribute('aria-pressed'), 'true');
+      if (width === 390) {
+        assert.equal(await page.locator('#mobile-explanation').isVisible(), true);
+        assert.equal(await page.locator('.content').isVisible(), false);
+        await page.locator('#back-to-result').click();
+        assert.equal(await page.locator('#mobile-explanation').isVisible(), false);
+      }
       assert.equal(await page.locator('#mission-profile').isVisible(), true);
       if (width === 390) {
         await page.locator('#day-choice').selectOption('2026-11-14');

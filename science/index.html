@@ -83,10 +83,23 @@
     .mode button:focus-visible,.scene-controls button:focus-visible,.mission-primary:focus-visible,.mission-secondary:focus-visible{outline:2px solid #f5d6a3;outline-offset:3px}
     body.embedded .top,body.embedded .sources{display:none}
     body.embedded .hud{padding-top:30px}
+    .mobile-explanation{display:none}
+    @media(max-width:700px){
+      body.explaining .hud{min-height:100svh;height:100svh}
+      body.explaining .content{display:none}
+      body.explaining .bottom{position:fixed;left:20px;right:20px;bottom:20px;z-index:5;display:block}
+      body.explaining .scene-controls,body.explaining .right-bottom{display:none}
+      body.explaining .timeline{margin:0}
+      body.explaining .mobile-explanation{display:block;position:fixed;top:82px;left:20px;right:20px;z-index:5;padding:16px 18px;background:rgba(5,10,13,.78);border:1px solid rgba(204,225,219,.44);backdrop-filter:blur(18px);box-shadow:0 15px 45px rgba(0,0,0,.3)}
+      .mobile-explanation small{display:block;color:#aac7c1;font:9px 'DM Mono',monospace;letter-spacing:.13em;margin-bottom:9px}
+      .mobile-explanation strong{display:block;font:600 17px/1.2 Manrope,Arial,sans-serif;margin-bottom:8px}
+      .mobile-explanation p{color:#bdcbc6;font:11px/1.5 Manrope,Arial,sans-serif;margin:0 0 12px}
+      .mobile-explanation button{border:0;border-top:1px solid rgba(225,237,232,.35);background:transparent;color:#eaf4ef;padding:11px 0 0;text-align:left;width:100%;font:10px 'DM Mono',monospace;letter-spacing:.1em}
+    }
   </style>
 </head>
 <body>
-  <canvas id="scene" aria-label="Interactive three-dimensional terrain model of lunar Site 04"></canvas><div id="evidence-callout" class="evidence-callout" hidden></div>
+  <canvas id="scene" aria-label="Interactive three-dimensional terrain model of lunar Site 04"></canvas><div id="evidence-callout" class="evidence-callout" hidden></div><div class="mobile-explanation" id="mobile-explanation"><small id="mobile-evidence-label">TERRAIN EVIDENCE / SITE 07</small><strong id="mobile-evidence-title">Horizon ridge</strong><p id="mobile-evidence-detail"></p><button id="back-to-result" type="button">BACK TO THE RESULT ↓</button></div>
   <div class="veil"></div><div class="grain"></div><div class="loading" id="loading">LOADING MEASURED TERRAIN ···</div>
   <main class="hud">
     <header class="top"><div class="brand"><span class="brand-mark"></span>LUNA—VIEW</div><div class="top-center"><span>SCIENCE / LIVE SCENE</span><span>01 — SITE ANALYSIS</span></div><div class="top-right"><div class="data-tag">LOLA TOPOGRAPHY · 5 M SOURCE</div><button class="language" id="language" aria-label="Switch language">RU</button></div></header>
@@ -98,5 +111,5 @@
     <footer class="bottom"><div class="scene-controls"><button id="orbit" class="active">ORBIT VIEW</button><button id="overhead">OVERHEAD</button></div><div class="timeline"><div class="timeline-top"><span class="timeline-label">SOLAR GEOMETRY / SITE 04</span><span class="date" id="date">14 NOV 2026 · 12:00 UTC</span></div><div class="range-row"><button class="play" id="play" aria-label="Play timeline">▶</button><input id="time" type="range" min="0" max="192" step="1" value="12" aria-label="UTC hour" /></div><div class="range-labels"><span>14 NOV</span><span>16 NOV</span><span>18 NOV</span><span>20 NOV</span><span>22 NOV</span></div></div><div class="right-bottom"><div class="mode"><button id="photometric" class="active">SURFACE</button><button id="topographic">ELEVATION</button><button id="slope">SLOPE</button></div><div class="legend" id="legend"><span id="legend-min">−2.85 KM</span><span class="legend-bar"></span><span id="legend-max">+1.80 KM</span></div><div class="footer-label" id="mode-caption">MEASURED RELIEF · ILLUSTRATIVE COLOR</div></div></footer>
   </main>
   <script type="importmap">{"imports":{"three":"./three.module.js"}}</script>
-  <script type="module" src="./luna_view_3d_science_reference.js?v=20261115d"></script>
+  <script type="module" src="./luna_view_3d_science_reference.js?v=20261115e"></script>
 </body></html>

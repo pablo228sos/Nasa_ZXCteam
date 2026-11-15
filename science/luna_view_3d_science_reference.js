@@ -69,6 +69,7 @@ function translateStatic() {
   document.querySelector('.panel-title').textContent = 'Свет и видимость';
   $('mission-kicker').textContent = '01 / ОКНО МИССИИ';
   $('mission-title').textContent = 'Найди время, когда есть свет и путь к Земле.';
+  $('back-to-result').textContent = 'К РЕЗУЛЬТАТУ ↓';
   $('find-window').innerHTML = 'НАЙТИ ОКНО МИССИИ <span>↗</span>';
   $('show-why').textContent = 'ПОКАЗАТЬ ПРИЧИНУ НА РЕЛЬЕФЕ ↗';
   $('mission-legend').innerHTML = 'СОЛНЦЕ <i></i> ЗЕМЛЯ <i></i> ОБА <i></i>';
@@ -461,6 +462,8 @@ function updateEvidence(index) {
   const distanceText = distance < 1000 ? `${distance.toFixed(0)} ${locale === 'ru' ? 'М' : 'M'}` : `${(distance / 1000).toFixed(1)} ${locale === 'ru' ? 'КМ' : 'KM'}`;
   $('mission-detail').textContent = gap > 0 ? missionText[locale].blocked(gap, distanceText) : missionText[locale].clear(-gap, sunGap);
   $('evidence-callout').textContent = `${gap > 0 ? (locale === 'ru' ? 'ЗАКРЫВАЮЩИЙ ГРЕБЕНЬ' : 'BLOCKING RIDGE') : (locale === 'ru' ? 'ГРЕБЕНЬ ГОРИЗОНТА' : 'HORIZON RIDGE')} · ${distanceText}`;
+  $('mobile-evidence-title').textContent = $('evidence-callout').textContent;
+  $('mobile-evidence-detail').textContent = $('mission-detail').textContent;
   renderEvidenceProfile(azimuth, earth[2], distance);
 }
 
@@ -606,6 +609,11 @@ async function toggleDetail() {
 
 $('find-window').addEventListener('click', findMissionWindow);
 $('show-why').addEventListener('click', showWhy);
+$('back-to-result').addEventListener('click', () => {
+  document.body.classList.remove('explaining');
+  document.querySelector('.science').classList.remove('explaining');
+  $('mission-result').scrollIntoView({ behavior: reduceMotion ? 'instant' : 'smooth', block: 'start' });
+});
 
 function setMode(mode) {
   if (!terrain) return;
@@ -696,6 +704,7 @@ try {
   const siteTitle = locale === 'ru' ? ({ '01': 'Соединяющий<span>гребень.</span>', '04': 'Кромка<span>Шеклтона.</span>', '07': 'Пик у<span>Шеклтона.</span>' })[siteId] : ({ '01': 'Connecting<span>Ridge.</span>', '04': 'Shackleton<span>Rim.</span>', '07': 'Peak near<span>Shackleton.</span>' })[siteId];
   document.querySelector('h1').innerHTML = siteTitle;
   document.querySelector('.intro .eyebrow').textContent = locale === 'ru' ? `ЮЖНЫЙ ПОЛЮС / УЧАСТОК ${siteId}` : `SOUTH POLAR STUDY AREA / SITE ${siteId}`;
+  $('mobile-evidence-label').textContent = locale === 'ru' ? `РЕЛЬЕФ / УЧАСТОК ${siteId}` : `TERRAIN EVIDENCE / SITE ${siteId}`;
   document.querySelector('.timeline-label').textContent = locale === 'ru' ? `ПОЛОЖЕНИЕ СОЛНЦА / УЧАСТОК ${siteId}` : `SOLAR GEOMETRY / SITE ${siteId}`;
   document.querySelectorAll('.science .row strong')[2].textContent = `${((data.height_range_m[1] - data.height_range_m[0]) / 1000).toFixed(2)} km`;
   canvas.setAttribute('aria-label', `Interactive three-dimensional terrain model of lunar Site ${siteId}`);

@@ -14,6 +14,10 @@ Explore three lunar south-pole study points in measured 3D terrain. Find hourly 
 
 *The science view uses NASA LOLA elevation data and JPL Horizons Sun/Earth positions. The current result tests local geometry within 8 km at hourly intervals; it is not a power or communication forecast.*
 
+[![Phone view of the full-screen 3D terrain explanation with the horizon ridge marked](docs/screenshots/mobile-explanation.png)](https://pablo228sos.github.io/Nasa_ZXCteam/science/?site=07&find=1)
+
+*On phones, “Show why” opens the terrain with the measured horizon ridge marked, its distance and angular clearances, a UTC scrubber, and a direct return to the result.*
+
 ## Try the mission-window flow
 
 1. Open the live app and choose a UTC day in the three-site comparison.
