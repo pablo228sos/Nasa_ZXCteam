@@ -32,7 +32,7 @@ This repository is an **independent ZXC project** developed for the NASA Space A
     <td width="50%"><a href="https://pablo228sos.github.io/Nasa_ZXCteam/science/?site=07&amp;find=1"><img src="docs/screenshots/probe-point.png" alt="Moved study point and recalculated mission geometry" /></a></td>
   </tr>
   <tr>
-    <td><b>Explore.</b> Rotate the NASA-sourced Moon, focus the south pole, and choose one of three studied regions.</td>
+    <td><b>Explore.</b> Rotate the NASA-sourced Moon, visit four named landmarks, or open one of three studied regions with a single selection.</td>
     <td><b>Investigate.</b> Move a point in 3D or enter coordinates and see the evidence change.</td>
   </tr>
 </table>
@@ -49,16 +49,18 @@ The three reference centres have **95, 42, and 0 shared hourly geometric samples
 
 | Capability | Current implementation |
 | --- | --- |
-| Interactive Moon atlas | Rotatable globe with NASA LRO global color and height maps, NASA star background, three accurately located polar study centres, and a 193-hour Sun-direction preview. A polar focus uses callouts because the sites are too close to label separately at globe scale. |
+| Interactive Moon atlas | Rotatable globe with NASA LRO global color and height maps, NASA star background, three accurately located polar study centres, four USGS named landmarks, and a 193-hour Sun-direction preview. Selecting a studied point moves into its measured 3D simulation; landmarks remain atlas guides. |
 | Measured 3D terrain | Three 16 × 16 km south-polar NASA LOLA regions; orbit/overhead cameras, surface/elevation/slope views, optional 2 km detail. |
 | Move the study point | Coordinate entry, 3D picking, and a guided example within roughly 2 km of a studied centre. Recalculates the 6 km local horizon from the 5 m source grid. |
 | Find a mission window | Hourly Sun/Earth geometry for 14–22 November 2026 UTC, selectable by day, with a visible timeline and strongest sampled hour. |
 | Explain the result | Identifies the local blocking ridge and displays a directional terrain profile in the 3D scene. |
 | Test a scenario | Compare 0, 2, and 5 m antenna heights for the Earth-horizon geometry. |
 | Inspect evidence | Source-linked CSV, shareable URL, 1-RMS input-height sensitivity at ground level, and clear coverage limits. |
-| Experience | EN/RU interface, responsive layouts, reduced-motion behaviour, keyboard globe controls, WebGL fallback, cinematic introductory film. |
+| Experience | EN/RU interface, responsive layouts, reduced-motion behaviour, keyboard globe controls, WebGL fallback, progressive 2K-to-4K globe detail, cinematic introductory film. |
 
 **Coverage boundary:** the full Moon is a geographic visual atlas, not a whole-Moon 5 m simulator. Custom scientific points are supported only around the three included study regions. The browser uses bundled, reproducible terrain and ephemeris assets. A coordinate outside the measured envelope produces a coverage message. The 5 m grid is largely interpolated; its pitch is not independent measurement accuracy. The atlas Sun icon, star background and inter-body distances are illustrative; the light direction follows the included JPL samples.
+
+The named landmarks are navigable positions on the visual globe with links to their USGS records. Only Sites 01, 04 and 07 open local simulation. The atlas starts with a compact WebP map, loads relief and 4K detail after the first frame, and pauses rendering when idle.
 
 ## The intended final experience
 
@@ -93,6 +95,7 @@ Run the offline data checks and interactive browser checks:
 python -m pip install -r requirements.txt
 python scripts/verify_site_data.py
 python scripts/verify_globe_assets.py
+npm run build:atlas
 npm ci
 npm run test:probe
 npm run test:ui
@@ -105,7 +108,7 @@ The UI checks require Google Chrome. Rebuilding the scientific assets additional
 
 | Path | Purpose |
 | --- | --- |
-| [`index.html`](index.html), [`site.css`](site.css), [`site.js`](site.js), [`globe.js`](globe.js) | Landing experience, 3D lunar atlas, and three-site overview. |
+| [`index.html`](index.html), [`site.css`](site.css), [`site.js`](site.js), [`globe.js`](globe.js) | Landing experience, 3D lunar atlas source, named landmarks, and site-to-simulation transition. `npm run build:atlas` writes the committed `globe.bundle.js`. |
 | [`science/`](science/) | 3D science interface and versioned derived assets. |
 | [`scripts/`](scripts/) | Data generation, source validation, and browser interaction checks. |
 | [`media/`](media/) | Generated introductory film and earlier visual studies. |

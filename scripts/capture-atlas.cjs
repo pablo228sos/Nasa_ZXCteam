@@ -11,9 +11,15 @@ const path = require('node:path');
       await page.goto('http://127.0.0.1:8765/', { waitUntil: 'domcontentloaded' });
       await page.locator('#atlas-stage').scrollIntoViewIfNeeded();
       await page.locator('#atlas-stage.is-ready').waitFor({ timeout: 30000 });
+      if (name === 'desktop') await page.waitForFunction(() => document.querySelector('#atlas-stage')?.dataset.quality === '4k', undefined, { timeout: 30000 });
       await page.addStyleTag({ content: '.site-header { display: none !important }' });
       await page.waitForTimeout(500);
       await page.locator('#terrain').screenshot({ path: path.resolve(__dirname, `../docs/screenshots/lunar-atlas-${name}.png`) });
+      if (name === 'desktop') {
+        await page.locator('[data-atlas-landmark="tycho"]').click();
+        await page.waitForTimeout(900);
+        await page.locator('#terrain').screenshot({ path: path.resolve(__dirname, '../docs/screenshots/lunar-atlas-tycho.png') });
+      }
       await page.locator('#atlas-focus').click();
       await page.locator('#atlas-stage').scrollIntoViewIfNeeded();
       await page.waitForTimeout(700);

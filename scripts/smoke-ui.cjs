@@ -5,7 +5,7 @@ const path = require('node:path');
 const { chromium } = require('playwright-core');
 
 const root = path.resolve(__dirname, '..');
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.bin': 'application/octet-stream', '.gz': 'application/gzip', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp4': 'video/mp4' };
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.bin': 'application/octet-stream', '.gz': 'application/gzip', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.mp4': 'video/mp4' };
 const server = http.createServer(async (request, response) => {
   const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
   const file = path.resolve(root, `.${pathname}`, pathname.endsWith('/') ? 'index.html' : '');
@@ -93,39 +93,51 @@ const server = http.createServer(async (request, response) => {
         await page.waitForURL(/lang=ru/);
         assert.equal(await page.locator('html').getAttribute('lang'), 'ru');
         await page.locator('#back-home').click();
-        await page.waitForURL(`${base}/`);
+        await page.waitForURL(`${base}/#terrain`);
       }
       console.log(`Science ${width}px: controls, state, layout OK`);
       await page.close();
     }
     for (const width of [390, 1440]) {
-      const page = await browser.newPage({ viewport: { width, height: 850 }, reducedMotion: 'reduce' });
+      const page = await browser.newPage({ viewport: { width, height: 850 }, reducedMotion: width === 390 ? 'reduce' : 'no-preference' });
       await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width}px: landing overflows horizontally`);
       await page.locator('#atlas-stage').scrollIntoViewIfNeeded();
       await page.locator('#atlas-stage.is-ready').waitFor({ timeout: 30000 });
+      if (width === 390) {
+        const boundary = await page.locator('.atlas-note span').boundingBox();
+        const source = await page.locator('.atlas-note a').boundingBox();
+        assert.ok(source.y >= boundary.y + boundary.height + 4, 'mobile source link overlaps atlas note');
+      }
+      await page.locator('[data-atlas-landmark="tycho"]').click();
+      assert.equal(await page.locator('#atlas-stage').getAttribute('data-mode'), 'landmark');
+      assert.match(await page.locator('#atlas-source').getAttribute('href'), /planetarynames\.wr\.usgs\.gov\/Feature\/6163/);
+      assert.equal(await page.locator('#atlas-enter').isVisible(), false);
       await page.locator('#atlas-focus').click();
       await page.waitForTimeout(1000);
       assert.equal(await page.locator('#atlas-stage').getAttribute('data-mode'), 'pole');
       assert.equal(await page.locator('#atlas-pins').isVisible(), true);
       assert.equal(await page.locator('#atlas-pin-lines').isVisible(), true);
-      await page.locator('[data-atlas-pin="01"]').click();
-      assert.match(await page.locator('#atlas-enter').getAttribute('href'), /site=01/);
-      await page.locator('[data-atlas-site="04"]').click();
-      assert.equal(await page.locator('[data-atlas-site="04"]').getAttribute('aria-pressed'), 'true');
-      assert.match(await page.locator('#atlas-enter').getAttribute('href'), /site=04.*day=2026-11-19/);
       await page.locator('#atlas-hour').fill('24');
       assert.match(await page.locator('#atlas-time-label').textContent(), /15 NOV 2026/);
       assert.match(await page.locator('#atlas-enter').getAttribute('href'), /day=2026-11-15/);
       await page.locator('[data-lang="ru"]').click();
       assert.match(await page.locator('#atlas-enter').getAttribute('href'), /lang=ru/);
-      await page.locator('#atlas-overview').click();
-      assert.equal(await page.locator('#atlas-stage').getAttribute('data-mode'), 'global');
-      await page.locator('#atlas-canvas').focus();
-      await page.keyboard.press('ArrowLeft');
-      await page.keyboard.press('+');
+      await page.locator('[data-atlas-pin="01"]').click();
+      if (width === 1440) await page.locator('#atlas-transition.visible').waitFor({ timeout: 1200 });
+      await page.waitForURL(/\/science\//, { timeout: 15000 });
+      const destination = new URL(page.url());
+      assert.equal(destination.searchParams.get('site'), '01');
+      assert.equal(destination.searchParams.get('day'), '2026-11-15');
+      assert.equal(destination.searchParams.get('lang'), 'ru');
+      assert.equal(await page.locator('body.from-atlas').count(), 1);
+      await page.waitForFunction(() => !document.querySelector('#loading') || document.querySelector('#loading').classList.contains('done'), undefined, { timeout: 30000 });
+      assert.equal(await page.locator('#site-choice').inputValue(), '01');
+      await page.locator('#back-home').click();
+      await page.waitForURL(`${base}/#terrain`);
+      await page.locator('#atlas-stage.is-ready').waitFor({ timeout: 30000 });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width}px: atlas overflows horizontally`);
-      console.log(`Landing ${width}px: NASA globe, selection, time, language, layout OK`);
+      console.log(`Landing ${width}px: landmarks, one-click transition, return, time, language, layout OK`);
       await page.close();
     }
   } finally {

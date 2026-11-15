@@ -31,6 +31,16 @@ SOURCES = {
 RADIUS_M = 1_737_400
 HEIGHT_MIN_M = -9_000
 HEIGHT_MAX_M = 11_000
+LANDMARKS = [
+    {"id": "tycho", "name": "Tycho", "lat_deg": -43.30, "lon_e_deg": -11.22,
+     "diameter_km": 85.29, "kind": "crater", "source": "https://planetarynames.wr.usgs.gov/Feature/6163"},
+    {"id": "copernicus", "name": "Copernicus", "lat_deg": 9.62, "lon_e_deg": -20.08,
+     "diameter_km": 96.07, "kind": "crater", "source": "https://planetarynames.wr.usgs.gov/Feature/1296"},
+    {"id": "orientale", "name": "Mare Orientale", "lat_deg": -19.87, "lon_e_deg": -94.67,
+     "diameter_km": 294.16, "kind": "mare", "source": "https://planetarynames.wr.usgs.gov/Feature/3685"},
+    {"id": "tsiolkovskiy", "name": "Tsiolkovskiy", "lat_deg": -20.38, "lon_e_deg": 128.97,
+     "diameter_km": 184.39, "kind": "crater", "source": "https://planetarynames.wr.usgs.gov/Feature/6108"},
+]
 
 
 def source_file(name: str) -> Path:
@@ -68,9 +78,10 @@ def main() -> None:
     sources = {name: source_file(name) for name in SOURCES}
 
     with Image.open(sources["lroc_color_16bit_srgb_4k.tif"]) as image:
-        image.convert("RGB").save(OUTPUT / "moon-color-4k.jpg", "JPEG", quality=91,
-                                  subsampling=0, optimize=True)
-    shutil.copyfile(sources["lroc_color_2k.jpg"], OUTPUT / "moon-color-2k.jpg")
+        color = image.convert("RGB")
+        color.save(OUTPUT / "moon-color-4k.webp", "WEBP", quality=88, method=6)
+        color.resize((2048, 1024), Image.Resampling.LANCZOS).save(
+            OUTPUT / "moon-color-2k.webp", "WEBP", quality=82, method=6)
     shutil.copyfile(sources["starmap_2020_4k_print.jpg"], OUTPUT / "stars-2020.jpg")
 
     with Image.open(sources["ldem_4_uint.tif"]) as image:
@@ -96,6 +107,7 @@ def main() -> None:
              "lon_e_deg": item["site"]["lon_e_deg"], "height_m": item["site"]["height_m"]}
             for site_id, item in source_sites.items()
         ],
+        "landmarks": LANDMARKS,
         "sun": [[sample[0], *sky_vector(reference["site"], sample)] for sample in reference["sun"]],
         "earth": [[sample[0], *sky_vector(reference["site"], sample)] for sample in reference["earth"]],
     }

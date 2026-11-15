@@ -1,11 +1,13 @@
 {
   "private": true,
   "scripts": {
+    "build:atlas": "esbuild globe.js --bundle --minify --format=esm --target=es2020 --outfile=globe.bundle.js --legal-comments=inline",
     "test:ui": "node scripts/smoke-ui.cjs",
     "test:probe": "node scripts/verify_coordinate_probe.mjs",
     "test:probe-ui": "node scripts/smoke-probe.cjs"
   },
   "devDependencies": {
+    "esbuild": "^0.28.2",
     "playwright-core": "1.65.1"
   }
 }

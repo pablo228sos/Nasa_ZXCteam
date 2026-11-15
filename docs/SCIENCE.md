@@ -8,6 +8,8 @@ The landing-page Moon is a **visual atlas** built from [NASA SVS's CGI Moon Kit]
 
 The site markers use the reference-centre south latitude and east longitude stored in the corresponding local science JSON. They are close enough together that the overview combines them into one south-pole marker. The polar focus connects three labels to their projected coordinates. Zoom is deliberately limited because the global texture does not resolve individual site terrain. Selecting a site opens its separate NASA PGDA 5 m LOLA scene.
 
+Four additional atlas markers identify Tycho, Copernicus, Mare Orientale and Tsiolkovskiy using coordinates and diameters from the [IAU/USGS Gazetteer of Planetary Nomenclature](https://planetarynames.wr.usgs.gov/). They rotate the global map to the named feature and link to its Gazetteer entry. They have no local DEM, horizon calculation, or mission-window result in this release. The three south-polar study markers are the only entrances to the measured simulation.
+
 The atlas directional light converts each bundled Site 07 JPL Horizons Sun azimuth/elevation sample into a Moon-fixed unit vector using the site's local east, north and up basis. This is a **directional preview** of 193 hourly samples, not a solar irradiance or shadow forecast at every global point. The decorative Sun disc is not an ephemeris-positioned body; its size, placement and distance are illustrative. The background uses the [NASA SVS Deep Star Maps 2020](https://svs.gsfc.nasa.gov/4851/) as a static visual field, not an observer-aligned sky for the selected hour.
 
 ## Source register
