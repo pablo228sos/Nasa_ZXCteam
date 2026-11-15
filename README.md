@@ -1,6 +1,6 @@
 <div align="center">
 
-![LUNA—VIEW repository banner](docs/brand/repo-banner.svg)
+![Illustrative panoramic lunar crater rim with Earth above the horizon](docs/brand/lunar-rim-banner.png)
 
 # LUNA—VIEW
 
@@ -22,7 +22,7 @@ Where on the lunar south pole can a surface mission see sunlight and Earth at th
 
 LUNA—VIEW lets a visitor move a study point, test a time interval, and trace the result back to a ridge on measured terrain. The visual scene and numerical result are connected: selecting a different location changes the local horizon, the Sun/Earth timeline, the highlighted blocker, and the downloadable evidence.
 
-This repository is an **independent ZXC project** developed for the NASA Space Apps Challenge 2026. NASA and JPL provide cited scientific data; they do not endorse this application. The opening film is an artistic illustration and is never used as terrain data.
+This repository is an **independent ZXC project** developed for the NASA Space Apps Challenge 2026. NASA and JPL provide cited scientific data; they do not endorse this application. The README cover and opening film are generated illustrations, never terrain data or reconstructions of a study site.
 
 ## See it in action
 
