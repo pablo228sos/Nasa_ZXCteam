@@ -22,7 +22,7 @@ Measured terrain, the position of the Sun and Earth, and an explanation you can 
 2. In [Site 07](https://pablo228sos.github.io/Nasa_ZXCteam/science/?site=07&find=1), find a Sun-and-Earth window, then reveal the ridge that controls the local horizon.
 3. Move the study point using the guided example or coordinates. Compare the timeline, terrain explanation, and exported evidence.
 
-The four named landmarks are visual atlas stops with USGS links. Local calculations are available for Sites 01, 04, and 07 only. [What works now](#what-is-available-today) · [Scientific limits](docs/SCIENCE.md) · [Planned work](ROADMAP.md).
+The four named landmarks are visual atlas stops with USGS links. Local calculations are available for Sites 01, 04, and 07 only. [What works now](#what-is-available-today) · [Formulas, sources and limits](docs/SCIENCE.md) · [Planned work](ROADMAP.md).
 
 ## The question
 

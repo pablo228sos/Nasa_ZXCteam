@@ -60,9 +60,53 @@ For a moved-point comparison, **both** the reference and moved point are recalcu
 
 The antenna control tests 0, 2, and 5 m observer height for the Earth horizon by adjusting the stored directional terrain profiles. Ground-level sunlight is unchanged. At raised heights, the source-RMS envelope is not recalculated; the CSV leaves those sensitivity columns blank.
 
+### Calculation reference
+
+These equations describe the implemented geometry. Angles inside trigonometric functions are in radians; the interface displays degrees. Latitude is signed (south is negative), longitude is positive east, and `R = 1,737,400 m`.
+
+```text
+South-polar projection (coordinate_probe.mjs):
+  ρ = 2R tan(π/4 + latitude/2)
+  x = ρ sin(longitude),  y = ρ cos(longitude)
+  latitude = −π/2 + 2 atan(√(x²+y²)/(2R))
+  longitude = atan2(x, y) modulo 2π
+
+Moved-point ray on the south-polar grid:
+  north_xy = (sin(longitude), cos(longitude))
+  east_xy = (cos(longitude), −sin(longitude))
+  point(a,d) = observer_xy + d[north_xy cos(a) + east_xy sin(a)]
+  h(u,v) = (1−u)(1−v)h00 + u(1−v)h10 + (1−u)vh01 + uvh11
+  where u,v are fractional positions within a source-grid cell
+
+Local terrain horizon, at each integer azimuth a and sampled range d:
+  α(a,d) = atan2(h(a,d) − h_observer − d²/(2R), d)
+  H(a) = max over sampled d of α(a,d)
+
+Hourly visibility for body B (Sun or Earth), with apparent elevation e_B and azimuth a_B:
+  V_B(t) = 1 if e_B(t) > H(round(a_B(t)) mod 360), otherwise 0
+  V_shared(t) = V_Sun(t) × V_Earth(t)
+  N_shared = Σ over selected hourly samples V_shared(t)
+  clearance_B(t) = e_B(t) − H(round(a_B(t)) mod 360)
+  best_hour = argmax over selected samples min(clearance_Sun(t), clearance_Earth(t))
+```
+
+The displayed window is the longest consecutive run of hourly samples with `V_shared = 1`; its endpoints are sampled hours, not interpolated contact times. `best_hour` is a geometric ranking, not a mission-quality score. The Earth horizon at antenna height `q` is recomputed from the stored per-range terrain profile as `H_q(a) = max_d atan(tan(α(a,d)) − q/d)`, for `q = 0, 2, 5 m`. The sunlight test stays at ground height.
+
+At a moved point, each bundled Horizons azimuth/elevation pair is resolved into a Moon-fixed unit vector at the reference centre, then projected onto the new local basis:
+
+```text
+  v = up_ref sin(e) + north_ref cos(e) cos(a) + east_ref cos(e) sin(a)
+  e_new = asin(v · up_new)
+  a_new = atan2(v · east_new, v · north_new) modulo 2π
+```
+
+This transfer assumes the bundled direction is usable across the small permitted movement envelope. The separate Horizons spot checks below measure its error at tested points; they do not prove accuracy at arbitrary lunar coordinates.
+
 ## Input-height sensitivity
 
 For each sampled ray, an upper adverse horizon raises terrain by one reported local total-Z RMS and lowers the observer by one observer RMS. A lower horizon applies the opposite shifts. Taking the maximum along each ray yields an envelope for **input-height sensitivity**. This check does not model spatial correlation, interpolation error beyond the supplied RMS map, long-range terrain, or the probability of a clear link.
+
+For terrain RMS `σ(a,d)` and observer RMS `σ₀`, the implemented upper and lower angles are `atan2(h(a,d) − h_observer − d²/(2R) ± σ(a,d) ± σ₀, d)`, followed by the maximum over range. The two plus signs give the adverse upper horizon; the two minus signs give the lower horizon. A sample counted above the upper horizon is a sensitivity check under those input shifts, **not** a statistical confidence statement.
 
 For the full included interval, the reference-site nominal counts are **Site 01: 42/193**, **Site 04: 0/193**, and **Site 07: 95/193**. Of those nominal shared samples, **18/42 at Site 01** and **80/95 at Site 07** remain above the adverse upper local horizon. The Site 07 preselected moved point changes the 6 km nominal count from **95/193 to 193/193** and has **193/193** above its 1-RMS upper local horizon. All counts are geometric hourly samples.
 
