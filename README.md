@@ -30,6 +30,8 @@ python -m http.server 8000
 
 Open `http://localhost:8000/`. The main action opens `http://localhost:8000/science/?site=07&find=1`; the selector also offers Sites 01 and 04. A local HTTP server is required because the terrain and ephemeris are fetched as separate files. No build step or API token is needed to view the included study.
 
+For the browser interaction check, install Node dependencies with `npm ci`, then run `npm run test:ui` with Google Chrome installed. The check opens the actual 3D scene at phone, tablet and desktop widths, clicks the terrain modes, changes day/site/language, and checks that the evidence panel clears the controls. It also verifies the landing preview at phone and desktop widths.
+
 ## What works now
 
 - Cinematic landing page with the **Earth over a lunar rim** video, native scrolling, responsive layouts, reduced-motion behavior, and EN/RU content. The main action opens Site07's mission-window analysis. A 1080p loop serves large screens; a 720p, 6.1 MB version serves phones. A three-site comparison strip reads the site data files on demand, calculates the 95/42/0 shared hourly samples, and shows synchronized Sun/Earth/both timelines. Visitors can filter the three cards to any bundled UTC day; each card opens its own 3D explanation with that date retained in the URL.

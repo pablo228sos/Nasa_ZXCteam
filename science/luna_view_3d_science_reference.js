@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 const $ = (id) => document.getElementById(id);
 const query = new URLSearchParams(location.search);
+if (query.get('embed') === '1') document.body.classList.add('embedded');
 const siteId = ['01', '04', '07'].includes(query.get('site')) ? query.get('site') : '04';
 const compareTarget = siteId === '04' ? '07' : '04';
 let locale = query.get('lang') === 'ru' ? 'ru' : 'en';
@@ -31,6 +32,7 @@ exportButton.className = 'mission-export';
 exportButton.type = 'button';
 exportButton.textContent = 'DOWNLOAD HOURLY EVIDENCE CSV ↓';
 $('mission-limit').after(exportButton);
+$('mission-detail').after($('show-why'));
 const copy = {
   en: {
     sunLit: 'SUN ABOVE LOCAL TERRAIN', sunBlocked: 'SUN BLOCKED BY LOCAL TERRAIN',
@@ -88,7 +90,7 @@ function translateStatic() {
 translateStatic();
 function openSite(nextSite, nextLocale = locale, autoFind = false) {
   const params = new URLSearchParams();
-  if (nextSite === '01' || nextSite === '07') params.set('site', nextSite);
+  params.set('site', nextSite);
   if (nextLocale === 'ru') params.set('lang', 'ru');
   if (selectedDay !== 'all') params.set('day', selectedDay);
   if (autoFind) params.set('find', '1');
@@ -106,6 +108,8 @@ $('day-choice').addEventListener('change', event => {
   const [start] = selectionBounds();
   state.time = start + 12;
   explanationActive = false;
+  $('show-why').classList.remove('active');
+  $('show-why').setAttribute('aria-pressed', 'false');
   detailActive = false;
   if (terrain) terrain.visible = true;
   if (closeTerrain) closeTerrain.visible = false;
@@ -150,6 +154,7 @@ function updatePanelToggle() {
 $('panel-toggle').addEventListener('click', () => { document.querySelector('.science').classList.toggle('collapsed'); updatePanelToggle(); });
 updatePanelToggle();
 const canvas = $('scene');
+for (const [id, active] of [['orbit', true], ['overhead', false], ['play', false], ['find-window', false], ['show-why', false]]) $(id).setAttribute('aria-pressed', String(active));
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 const preferredPixelRatio = () => Math.min(window.devicePixelRatio || 1, window.innerWidth < 700 ? 1.25 : 1.75);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -512,6 +517,9 @@ function findMissionWindow() {
   }
   $('mission-chart').replaceChildren(svg);
   $('mission-chart').setAttribute('aria-label', missionText[locale].chart(selectedRangeLabel()));
+  $('find-window').classList.add('evaluated');
+  $('find-window').setAttribute('aria-pressed', 'true');
+  $('find-window').innerHTML = `${locale === 'ru' ? 'РЕЗУЛЬТАТ' : 'RESULT'} · ${sharedCount}/${samples.length} ${locale === 'ru' ? 'ОБЩИХ ОТСЧЁТОВ' : 'SHARED SAMPLES'} <span>✓</span>`;
   svg.addEventListener('pointerdown', event => {
     const bounds = svg.getBoundingClientRect();
     state.time = rangeStart + clamp(Math.round((event.clientX - bounds.left) / bounds.width * (samples.length - 1)), 0, samples.length - 1);
@@ -523,6 +531,8 @@ function findMissionWindow() {
 
 function showWhy() {
   if (!data || !missionEvaluated) return;
+  $('show-why').classList.add('active');
+  $('show-why').setAttribute('aria-pressed', 'true');
   detailActive = false;
   terrain.visible = true;
   if (closeTerrain) closeTerrain.visible = false;
@@ -611,7 +621,11 @@ function setMode(mode) {
     closeTerrain.material.dispose();
     closeTerrain.material = terrainMaterial(mode);
   }
-  for (const [id, value] of [['photometric','surface'],['topographic','elevation'],['slope','slope']]) $(id).classList.toggle('active', mode === value);
+  for (const [id, value] of [['photometric','surface'],['topographic','elevation'],['slope','slope']]) {
+    const active = mode === value;
+    $(id).classList.toggle('active', active);
+    $(id).setAttribute('aria-pressed', String(active));
+  }
   $('legend').classList.toggle('visible', mode !== 'surface');
   $('legend').classList.toggle('slope', mode === 'slope');
   $('legend-min').textContent = mode === 'slope' ? '0°' : `${(data.height_range_m[0] / 1000).toFixed(2)} KM`;
@@ -621,9 +635,9 @@ function setMode(mode) {
 
 for (const [id, mode] of [['photometric','surface'],['topographic','elevation'],['slope','slope']]) $(id).addEventListener('click', () => setMode(mode));
 $('time').addEventListener('input', (event) => { state.time = Number(event.target.value); updateTime(); });
-$('play').addEventListener('click', () => { state.playing = !state.playing; $('play').textContent = state.playing ? 'Ⅱ' : '▶'; });
-$('overhead').addEventListener('click', () => { state.overhead = true; state.targetElevation = 1.45; state.targetRadius = 17000; $('overhead').classList.add('active'); $('orbit').classList.remove('active'); });
-$('orbit').addEventListener('click', () => { state.overhead = false; state.targetElevation = 0.35; state.targetRadius = 9600; $('orbit').classList.add('active'); $('overhead').classList.remove('active'); });
+$('play').addEventListener('click', () => { state.playing = !state.playing; $('play').textContent = state.playing ? 'Ⅱ' : '▶'; $('play').setAttribute('aria-pressed', String(state.playing)); $('play').setAttribute('aria-label', state.playing ? 'Pause timeline' : 'Play timeline'); });
+$('overhead').addEventListener('click', () => { state.overhead = true; state.targetElevation = 1.45; state.targetRadius = 17000; $('overhead').classList.add('active'); $('orbit').classList.remove('active'); $('overhead').setAttribute('aria-pressed','true'); $('orbit').setAttribute('aria-pressed','false'); });
+$('orbit').addEventListener('click', () => { state.overhead = false; state.targetElevation = 0.35; state.targetRadius = 9600; $('orbit').classList.add('active'); $('overhead').classList.remove('active'); $('orbit').setAttribute('aria-pressed','true'); $('overhead').setAttribute('aria-pressed','false'); });
 let pointer = null;
 canvas.addEventListener('pointerdown', event => { pointer = { x: event.clientX, y: event.clientY }; state.interacting = true; canvas.setPointerCapture(event.pointerId); $('hint').classList.add('hidden'); });
 canvas.addEventListener('pointermove', event => {
@@ -693,8 +707,6 @@ try {
   setTimeout(() => $('loading').remove(), 1000);
   if (query.get('find') === '1') {
     findMissionWindow();
-    // Browser scroll restoration can override the first scroll during navigation.
-    if (window.innerWidth < 700) setTimeout(() => $('mission-result').scrollIntoView({ behavior: reduceMotion ? 'instant' : 'smooth', block: 'center' }), 400);
   }
 } catch (error) {
   $('loading').textContent = `DATA LOAD FAILED · ${error.message}`;

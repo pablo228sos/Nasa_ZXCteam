@@ -48,6 +48,41 @@
     .site-choice{display:block;margin:15px 0 11px;color:#aabbb9;font:9px 'DM Mono',monospace;letter-spacing:.11em}.site-choice span{display:block;margin-bottom:7px}.site-choice select{width:100%;border:1px solid rgba(215,232,227,.28);border-radius:0;padding:10px 9px;background:#131c20;color:#edf4ef;font:11px 'DM Mono',monospace;cursor:pointer}.site-choice select:focus-visible{outline:2px solid #dce8e4;outline-offset:2px}
     .mission-export{display:block;width:100%;border:0;border-top:1px solid rgba(255,255,255,.14);margin-top:12px;padding:11px 0 1px;background:transparent;color:#c8d8d1;text-align:left;font:9px 'DM Mono',monospace;letter-spacing:.11em}.mission-export:hover{color:#fff;text-decoration:underline}
     @media(max-width:1100px){.science{width:310px}}@media(max-width:700px){.science{width:100%;max-height:none}.science.collapsed .mission-box{display:block}.science.collapsed .row,.science.collapsed .panel-foot{display:none}.mission-box h2{font-size:16px}body.explaining .intro{opacity:0;pointer-events:none}.evidence-callout{display:none}}
+    /* Keep the evidence panel clear of the control dock on large screens. */
+    @media(min-width:1101px){.science{margin-top:0;max-height:calc(100svh - 220px)}}
+    /* On compact screens the entire analysis is one scrollable page. */
+    @media(max-width:1100px){
+      html,body{overflow-x:hidden;overflow-y:auto}
+      .hud{height:auto;min-height:100svh;gap:28px;padding:24px clamp(20px,4vw,42px) 34px}
+      .content{display:block;flex:initial;min-height:0;padding-top:clamp(115px,19svh,210px)}
+      .intro{max-width:650px;margin:0}
+      .science{width:min(100%,600px);max-height:none;overflow:visible;margin:42px 0 0}
+      .bottom{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:end;gap:14px}
+      .bottom .timeline{max-width:none;grid-column:1 / -1;grid-row:1}
+      .scene-controls{display:flex;grid-column:1;grid-row:2}
+      .right-bottom{grid-column:2;grid-row:2;min-width:0}
+      .mode{flex-wrap:wrap}
+      .footer-label{font-size:9px}
+    }
+    @media(max-width:700px){
+      .hud{gap:24px;padding:20px 20px 32px}
+      .content{padding-top:clamp(80px,15svh,140px)}
+      .science{margin:30px 0 0}
+      .bottom{grid-template-columns:1fr;gap:14px}
+      .bottom .timeline,.scene-controls,.right-bottom{grid-column:1;grid-row:auto}
+      .right-bottom{margin:0;text-align:left}
+      .mode{justify-content:flex-start}
+      .legend{justify-content:flex-start}
+      .footer-label{text-align:left}
+      .scene-controls button,.mode button{min-height:40px;padding:10px 12px}
+      .date{white-space:normal}
+    }
+    .mode .active,.scene-controls .active{background:#dce8e4;color:#0b1517;border-color:#dce8e4;box-shadow:0 0 0 1px rgba(220,232,228,.25)}
+    .mission-primary.evaluated{background:#b9d5ca;border-color:#b9d5ca;color:#071211}
+    .mission-secondary.active{background:rgba(183,218,207,.22);border-color:#b9d5ca;color:#f4fffa}
+    .mode button:focus-visible,.scene-controls button:focus-visible,.mission-primary:focus-visible,.mission-secondary:focus-visible{outline:2px solid #f5d6a3;outline-offset:3px}
+    body.embedded .top,body.embedded .sources{display:none}
+    body.embedded .hud{padding-top:30px}
   </style>
 </head>
 <body>
@@ -63,5 +98,5 @@
     <footer class="bottom"><div class="scene-controls"><button id="orbit" class="active">ORBIT VIEW</button><button id="overhead">OVERHEAD</button></div><div class="timeline"><div class="timeline-top"><span class="timeline-label">SOLAR GEOMETRY / SITE 04</span><span class="date" id="date">14 NOV 2026 · 12:00 UTC</span></div><div class="range-row"><button class="play" id="play" aria-label="Play timeline">▶</button><input id="time" type="range" min="0" max="192" step="1" value="12" aria-label="UTC hour" /></div><div class="range-labels"><span>14 NOV</span><span>16 NOV</span><span>18 NOV</span><span>20 NOV</span><span>22 NOV</span></div></div><div class="right-bottom"><div class="mode"><button id="photometric" class="active">SURFACE</button><button id="topographic">ELEVATION</button><button id="slope">SLOPE</button></div><div class="legend" id="legend"><span id="legend-min">−2.85 KM</span><span class="legend-bar"></span><span id="legend-max">+1.80 KM</span></div><div class="footer-label" id="mode-caption">MEASURED RELIEF · ILLUSTRATIVE COLOR</div></div></footer>
   </main>
   <script type="importmap">{"imports":{"three":"./three.module.js"}}</script>
-  <script type="module" src="./luna_view_3d_science_reference.js?v=20261115b"></script>
+  <script type="module" src="./luna_view_3d_science_reference.js?v=20261115d"></script>
 </body></html>

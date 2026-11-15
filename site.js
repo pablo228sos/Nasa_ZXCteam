@@ -11,7 +11,7 @@ const words = {
     factorEarth: 'Earth has a horizon too.', factorEarthBody: 'Direct communication depends on whether Earth clears the terrain around a specific site.',
     factorTerrain: 'The terrain must be real.', factorTerrainBody: 'A visualisation only earns trust when its geometry, resolution and uncertainty can be traced to a source.',
     terrainLabel: 'THE TERRAIN', terrainEyebrow: 'ONE PLACE · EIGHT DAYS', terrainBody: 'Search for a shared Sun and Earth window, then see the terrain that shapes the answer across 16 × 16 km of measured topography.', terrainOpen: 'OPEN FULL 3D ANALYSIS',
-    stageNote: 'INTERACTIVE 3D MODEL · DRAG TO ORBIT', stageOpen: 'OPEN FULL SCREEN',
+    stageNote: 'MEASURED 3D TERRAIN · OPEN TO EXPLORE', stageOpen: 'OPEN FULL SCREEN', previewOpen: 'EXPLORE THE MEASURED TERRAIN',
     compareLabel: 'THREE SITES, ONE CLOCK', compareTitle: 'The horizon<br><em>changes everything.</em>', compareBody: 'The same UTC samples, tested against three measured landscapes. Each strip shows local geometric visibility. Choose a site to see the ridge behind the answer.', comparePeriod: 'PERIOD · UTC',
     site07Name: '07 / PEAK NEAR SHACKLETON', site01Name: '01 / CONNECTING RIDGE', site04Name: '04 / SHACKLETON RIM', sharedHours: '/ 193 HOURLY SAMPLES', inspect3d: 'INSPECT IN 3D ↗', sunLabel: 'SUN', earthLabel: 'EARTH', bothLabel: 'BOTH',
     compareLimit: 'Hourly geometry · 8 km local horizon · not a power or communication forecast.',
@@ -30,7 +30,7 @@ const words = {
     factorEarth: 'У Земли тоже есть горизонт.', factorEarthBody: 'Прямая связь зависит от того, видна ли Земля над рельефом вокруг конкретной точки.',
     factorTerrain: 'Рельеф должен быть настоящим.', factorTerrainBody: 'Визуализация заслуживает доверия, когда известны источник геометрии, разрешение и ограничения данных.',
     terrainLabel: 'РЕЛЬЕФ', terrainEyebrow: 'ОДНА ТОЧКА · ВОСЕМЬ ДНЕЙ', terrainBody: 'Ищи общее окно света и видимости Земли, затем смотри на измеренном рельефе 16 × 16 км, что определило результат.', terrainOpen: 'ОТКРЫТЬ 3D-АНАЛИЗ',
-    stageNote: 'ИНТЕРАКТИВНАЯ 3D-МОДЕЛЬ · ВРАЩАЙ МЫШЬЮ', stageOpen: 'НА ВЕСЬ ЭКРАН',
+    stageNote: 'ИЗМЕРЕННЫЙ 3D-РЕЛЬЕФ · ОТКРОЙ ДЛЯ ИССЛЕДОВАНИЯ', stageOpen: 'НА ВЕСЬ ЭКРАН', previewOpen: 'ИССЛЕДОВАТЬ ИЗМЕРЕННЫЙ РЕЛЬЕФ',
     compareLabel: 'ТРИ УЧАСТКА · ОДНО ВРЕМЯ', compareTitle: 'Горизонт<br><em>меняет всё.</em>', compareBody: 'Одни и те же часы UTC на трёх измеренных рельефах. Полосы показывают геометрическую видимость. Выбери участок, чтобы увидеть гребень за результатом.', comparePeriod: 'ПЕРИОД · UTC',
     site07Name: '07 / ПИК У ШЕКЛТОНА', site01Name: '01 / СОЕДИНЯЮЩИЙ ГРЕБЕНЬ', site04Name: '04 / КРАЙ ШЕКЛТОНА', sharedHours: '/ 193 ЧАСОВЫХ ОТСЧЁТОВ', inspect3d: 'СМОТРЕТЬ В 3D ↗', sunLabel: 'СОЛНЦЕ', earthLabel: 'ЗЕМЛЯ', bothLabel: 'ОБА',
     compareLimit: 'Часовой шаг · горизонт до 8 км · не прогноз энергии или радиосвязи.',
@@ -45,6 +45,7 @@ const header = document.getElementById('site-header');
 const heroVideo = document.getElementById('hero-video');
 const scienceLink = document.getElementById('science-link');
 const scienceLinkBottom = document.getElementById('science-link-bottom');
+const scienceMobilePreview = document.getElementById('science-mobile-preview');
 const heroMissionLink = document.getElementById('hero-mission-link');
 const sciencePreview = document.getElementById('science-preview');
 const comparisonDaySelect = document.getElementById('comparison-day');
@@ -73,6 +74,7 @@ function setLanguage(lang) {
   const scienceUrl = `./science/${scienceParams.size ? `?${scienceParams}` : ''}`;
   scienceLink.href = scienceUrl;
   scienceLinkBottom.href = scienceUrl;
+  scienceMobilePreview.href = scienceUrl;
   heroMissionLink.href = `./science/?site=07&find=1${comparisonDay === 'all' ? '' : `&day=${comparisonDay}`}${lang === 'ru' ? '&lang=ru' : ''}`;
   for (const card of document.querySelectorAll('.site-card')) {
     card.href = `./science/?site=${card.dataset.site}&find=1${comparisonDay === 'all' ? '' : `&day=${comparisonDay}`}${lang === 'ru' ? '&lang=ru' : ''}`;
@@ -81,8 +83,9 @@ function setLanguage(lang) {
   renderComparison();
   if (sciencePreview.dataset.currentLang !== lang) {
     sciencePreview.dataset.currentLang = lang;
-    sciencePreview.dataset.pendingSrc = scienceUrl;
-    if (sciencePreview.dataset.loaded === 'true') sciencePreview.src = scienceUrl;
+    const embeddedUrl = `${scienceUrl}${scienceUrl.includes('?') ? '&' : '?'}embed=1`;
+    sciencePreview.dataset.pendingSrc = embeddedUrl;
+    if (sciencePreview.dataset.loaded === 'true') sciencePreview.src = embeddedUrl;
   }
   try { localStorage.setItem('luna-view-lang', lang); } catch { /* private mode */ }
 }
@@ -187,6 +190,14 @@ if (comparison && 'IntersectionObserver' in window) {
 
 const scienceStage = document.querySelector('.science-stage');
 let scienceVisible = false;
+let previewNear = false;
+const compactPreview = window.matchMedia('(max-width: 1100px)');
+function loadPreviewIfNeeded() {
+  if (!previewNear || compactPreview.matches || sciencePreview.dataset.loaded === 'true') return;
+  sciencePreview.dataset.loaded = 'true';
+  sciencePreview.src = sciencePreview.dataset.pendingSrc;
+}
+compactPreview.addEventListener('change', loadPreviewIfNeeded);
 const sendScienceVisibility = () => {
   if (sciencePreview.dataset.loaded === 'true') sciencePreview.contentWindow?.postMessage({ type: 'luna-visibility', active: scienceVisible }, location.origin);
 };
@@ -194,15 +205,15 @@ sciencePreview.addEventListener('load', sendScienceVisibility);
 if ('IntersectionObserver' in window) {
   const loadScene = new IntersectionObserver((entries, observer) => {
     if (entries[0].isIntersecting) {
-      sciencePreview.dataset.loaded = 'true';
-      sciencePreview.src = sciencePreview.dataset.pendingSrc;
+      previewNear = true;
+      loadPreviewIfNeeded();
       observer.disconnect();
     }
   }, { rootMargin: '800px 0px' });
   loadScene.observe(scienceStage);
   const sceneVisibility = new IntersectionObserver((entries) => { scienceVisible = entries[0].isIntersecting; sendScienceVisibility(); }, { threshold: .01 });
   sceneVisibility.observe(scienceStage);
-} else { scienceVisible = true; sciencePreview.dataset.loaded = 'true'; sciencePreview.src = sciencePreview.dataset.pendingSrc; }
+} else { scienceVisible = true; previewNear = true; loadPreviewIfNeeded(); }
 
 function updateHeader() { header.classList.toggle('scrolled', window.scrollY > 32); }
 window.addEventListener('scroll', updateHeader, { passive: true });
