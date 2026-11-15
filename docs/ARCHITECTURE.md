@@ -11,10 +11,11 @@ flowchart TB
   subgraph Preparation[Offline preparation]
     A[NASA PGDA LOLA DEM + total-Z RMS] --> C[Python build and validation scripts]
     B[JPL Horizons reference ephemerides] --> C
+    J[NASA SVS global lunar maps and star map] --> C
   end
   C --> D[Versioned JSON, binary terrain, normal maps, packed 5 m grids]
   subgraph Browser[Static browser application]
-    D --> E[Landing overview]
+    D --> E[Landing overview and interactive lunar atlas]
     D --> F[Three.js terrain scene]
     D --> G[Coordinate and horizon engine]
     F --> H[Result + 3D explanation]
@@ -26,6 +27,8 @@ flowchart TB
 | Module | Current responsibility |
 | --- | --- |
 | `index.html`, `site.css`, `site.js` | Cinematic entry, responsive navigation, three-site comparison, EN/RU copy and routes into science views. |
+| `globe.js`, `media/globe/` | NASA-sourced rotatable global Moon, south-pole site selection, hourly solar-light preview, and low-cost fallback. The globe shares the bundled Three.js runtime with the science view. |
+| `scripts/build_globe_assets.py` | Downloads and hashes NASA SVS source maps, derives browser color/height/star assets, and transforms bundled JPL local azimuth/elevation samples into globe-frame directions. |
 | `science/index.html` | Scene shell, controls, result panel, source disclosure and mobile explanation layout. |
 | `science/luna_view_3d_science_reference.js` | Three.js scene, camera, timeline, site switching, mission-window calculation, evidence presentation and export. |
 | `science/coordinate_probe.mjs` | Projection, local-basis transformation, packed-grid decoding, bilinear samples, moved-point horizon and RMS envelope. |
@@ -33,7 +36,9 @@ flowchart TB
 | `scripts/augment_height_sensitivity.py`, `scripts/build_probe_grid.py` | Aligned uncertainty envelope and custom-point grid assets. |
 | `scripts/verify_*.py`, `scripts/verify_coordinate_probe.mjs`, `scripts/smoke-*.cjs` | Data, source and browser interaction checks. |
 
-The entry point loads only its own media and comparison data. The science view loads the selected site's terrain and ephemeris. The high-resolution point grids load when a visitor asks to move the study point. The optional 2 km close-up is also requested only when opened. All time filtering and local-horizon comparisons then run in the browser.
+The entry point starts with the film and static interface. The globe loads only when the atlas approaches the viewport, choosing a 2K or 4K color map by screen width. Rendering stops when idle or offscreen. The science view loads the selected site's terrain and ephemeris. The high-resolution point grids load when a visitor asks to move the study point. The optional 2 km close-up is also requested only when opened. All time filtering and local-horizon comparisons then run in the browser.
+
+The global sphere uses a coarse visual elevation map and NASA color imagery. Its three sites lie within roughly one degree of the lunar south pole; a single global cluster expands to three coordinate-linked callouts in polar focus. These points open the separate local 5 m analysis. Global color, star field, visible Sun icon and distances are not scientific measurements of the chosen local hour. The directional light uses precomputed JPL Horizons samples.
 
 ## Scientific data contract
 

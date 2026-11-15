@@ -2,6 +2,14 @@
 
 LUNA—VIEW currently answers a bounded geometric question: at a chosen point and one of 193 hourly UTC samples, are the apparent Sun and Earth above a **local horizon** derived from the included lunar terrain? This document describes that calculation, its sources, and the tests required before extending it to mission planning.
 
+## Global atlas versus local analysis
+
+The landing-page Moon is a **visual atlas** built from [NASA SVS's CGI Moon Kit](https://svs.gsfc.nasa.gov/4720/): an LRO-derived global color map and a coarse LOLA global elevation map. The NASA kit notes that polar areas of its color map use LOLA albedo to fill gaps, and that this map is optimized for visual work. Its relief is sampled at 4 pixels per degree; the derived 8-bit browser height texture is only for perceptible globe shape. Neither the global texture nor its lighting is used for the numerical site results.
+
+The site markers use the reference-centre south latitude and east longitude stored in the corresponding local science JSON. They are close enough together that the overview combines them into one south-pole marker. The polar focus connects three labels to their projected coordinates. Zoom is deliberately limited because the global texture does not resolve individual site terrain. Selecting a site opens its separate NASA PGDA 5 m LOLA scene.
+
+The atlas directional light converts each bundled Site 07 JPL Horizons Sun azimuth/elevation sample into a Moon-fixed unit vector using the site's local east, north and up basis. This is a **directional preview** of 193 hourly samples, not a solar irradiance or shadow forecast at every global point. The decorative Sun disc is not an ephemeris-positioned body; its size, placement and distance are illustrative. The background uses the [NASA SVS Deep Star Maps 2020](https://svs.gsfc.nasa.gov/4851/) as a static visual field, not an observer-aligned sky for the selected hour.
+
 ## Source register
 
 | Input | Source and use | Important qualification |

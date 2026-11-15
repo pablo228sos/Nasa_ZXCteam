@@ -1,6 +1,6 @@
 <div align="center">
 
-![Illustrative panoramic lunar crater rim with Earth above the horizon](docs/brand/lunar-rim-banner.png)
+![Interactive NASA-sourced lunar globe and site selector](docs/screenshots/lunar-atlas-desktop.png)
 
 # LUNA—VIEW
 
@@ -22,17 +22,17 @@ Where on the lunar south pole can a surface mission see sunlight and Earth at th
 
 LUNA—VIEW lets a visitor move a study point, test a time interval, and trace the result back to a ridge on measured terrain. The visual scene and numerical result are connected: selecting a different location changes the local horizon, the Sun/Earth timeline, the highlighted blocker, and the downloadable evidence.
 
-This repository is an **independent ZXC project** developed for the NASA Space Apps Challenge 2026. NASA and JPL provide cited scientific data; they do not endorse this application. The README cover and opening film are generated illustrations, never terrain data or reconstructions of a study site.
+This repository is an **independent ZXC project** developed for the NASA Space Apps Challenge 2026. NASA and JPL provide cited scientific data; they do not endorse this application. The README cover now shows the actual browser atlas built from NASA lunar maps. The opening film is generated illustration, never terrain data or a reconstruction of a study site.
 
 ## See it in action
 
 <table>
   <tr>
-    <td width="50%"><a href="https://pablo228sos.github.io/Nasa_ZXCteam/"><img src="docs/screenshots/landing.png" alt="Cinematic LUNA—VIEW landing page" /></a></td>
+    <td width="50%"><a href="https://pablo228sos.github.io/Nasa_ZXCteam/#terrain"><img src="docs/screenshots/lunar-atlas-mobile.png" alt="Interactive Moon atlas on a phone" /></a></td>
     <td width="50%"><a href="https://pablo228sos.github.io/Nasa_ZXCteam/science/?site=07&amp;find=1"><img src="docs/screenshots/probe-point.png" alt="Moved study point and recalculated mission geometry" /></a></td>
   </tr>
   <tr>
-    <td><b>Explore.</b> Enter through a cinematic overview, then compare three studied regions.</td>
+    <td><b>Explore.</b> Rotate the NASA-sourced Moon, focus the south pole, and choose one of three studied regions.</td>
     <td><b>Investigate.</b> Move a point in 3D or enter coordinates and see the evidence change.</td>
   </tr>
 </table>
@@ -49,15 +49,16 @@ The three reference centres have **95, 42, and 0 shared hourly geometric samples
 
 | Capability | Current implementation |
 | --- | --- |
+| Interactive Moon atlas | Rotatable globe with NASA LRO global color and height maps, NASA star background, three accurately located polar study centres, and a 193-hour Sun-direction preview. A polar focus uses callouts because the sites are too close to label separately at globe scale. |
 | Measured 3D terrain | Three 16 × 16 km south-polar NASA LOLA regions; orbit/overhead cameras, surface/elevation/slope views, optional 2 km detail. |
 | Move the study point | Coordinate entry, 3D picking, and a guided example within roughly 2 km of a studied centre. Recalculates the 6 km local horizon from the 5 m source grid. |
 | Find a mission window | Hourly Sun/Earth geometry for 14–22 November 2026 UTC, selectable by day, with a visible timeline and strongest sampled hour. |
 | Explain the result | Identifies the local blocking ridge and displays a directional terrain profile in the 3D scene. |
 | Test a scenario | Compare 0, 2, and 5 m antenna heights for the Earth-horizon geometry. |
 | Inspect evidence | Source-linked CSV, shareable URL, 1-RMS input-height sensitivity at ground level, and clear coverage limits. |
-| Experience | EN/RU interface, responsive layouts, reduced-motion behaviour, cinematic introductory film. |
+| Experience | EN/RU interface, responsive layouts, reduced-motion behaviour, keyboard globe controls, WebGL fallback, cinematic introductory film. |
 
-**Coverage boundary:** custom points are supported only around the three included study regions. The browser uses bundled, reproducible terrain and ephemeris assets. A coordinate outside the measured envelope produces a coverage message. The 5 m grid is largely interpolated; its pitch is not independent measurement accuracy.
+**Coverage boundary:** the full Moon is a geographic visual atlas, not a whole-Moon 5 m simulator. Custom scientific points are supported only around the three included study regions. The browser uses bundled, reproducible terrain and ephemeris assets. A coordinate outside the measured envelope produces a coverage message. The 5 m grid is largely interpolated; its pitch is not independent measurement accuracy. The atlas Sun icon, star background and inter-body distances are illustrative; the light direction follows the included JPL samples.
 
 ## The intended final experience
 
@@ -75,7 +76,7 @@ These are **planned capabilities**, with acceptance criteria in the [implementat
 
 ![NASA LOLA and JPL Horizons feed reproducible assets, browser analysis and source-linked evidence](docs/brand/data-flow.svg)
 
-The reference-site horizon samples 360 directions every 50 m to 8 km. A moved point loads an on-demand 5 m height and RMS grid and recalculates those directions to 6 km. Sun and Earth directions at that point are transformed from bundled JPL Horizons vectors. JPL's API policy does not permit embedding its API directly in a website, so the browser does not call it live. [Architecture →](docs/ARCHITECTURE.md) · [Scientific method →](docs/SCIENCE.md)
+The atlas derives lightweight browser textures from [NASA's CGI Moon Kit](https://svs.gsfc.nasa.gov/4720/) and [Deep Star Maps](https://svs.gsfc.nasa.gov/4851/). Its solar light follows precomputed JPL Horizons directions. The local science view loads separate NASA LOLA 5 m grids. Its reference-site horizon samples 360 directions every 50 m to 8 km. A moved point loads an on-demand 5 m height and RMS grid and recalculates those directions to 6 km. Sun and Earth directions at that point are transformed from bundled JPL Horizons vectors. JPL's API policy does not permit embedding its API directly in a website, so the browser does not call it live. [Architecture →](docs/ARCHITECTURE.md) · [Scientific method →](docs/SCIENCE.md)
 
 ## Run and verify
 
@@ -91,6 +92,7 @@ Run the offline data checks and interactive browser checks:
 ```sh
 python -m pip install -r requirements.txt
 python scripts/verify_site_data.py
+python scripts/verify_globe_assets.py
 npm ci
 npm run test:probe
 npm run test:ui
@@ -103,7 +105,7 @@ The UI checks require Google Chrome. Rebuilding the scientific assets additional
 
 | Path | Purpose |
 | --- | --- |
-| [`index.html`](index.html), [`site.css`](site.css), [`site.js`](site.js) | Landing experience and three-site overview. |
+| [`index.html`](index.html), [`site.css`](site.css), [`site.js`](site.js), [`globe.js`](globe.js) | Landing experience, 3D lunar atlas, and three-site overview. |
 | [`science/`](science/) | 3D science interface and versioned derived assets. |
 | [`scripts/`](scripts/) | Data generation, source validation, and browser interaction checks. |
 | [`media/`](media/) | Generated introductory film and earlier visual studies. |

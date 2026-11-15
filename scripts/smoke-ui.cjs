@@ -102,17 +102,30 @@ const server = http.createServer(async (request, response) => {
       const page = await browser.newPage({ viewport: { width, height: 850 }, reducedMotion: 'reduce' });
       await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width}px: landing overflows horizontally`);
-      if (width === 390) {
-        assert.equal(await page.locator('#science-mobile-preview').isVisible(), true);
-        assert.equal(await page.locator('#science-preview').isVisible(), false);
-        assert.match(await page.locator('#science-mobile-preview').getAttribute('href'), /^\.\/science\//);
-      } else {
-        await page.locator('.science-stage').scrollIntoViewIfNeeded();
-        const frame = page.frameLocator('#science-preview');
-        await frame.locator('body.embedded').waitFor({ timeout: 30000 });
-        assert.equal(await frame.locator('.top').isVisible(), false);
-      }
-      console.log(`Landing ${width}px: preview and header OK`);
+      await page.locator('#atlas-stage').scrollIntoViewIfNeeded();
+      await page.locator('#atlas-stage.is-ready').waitFor({ timeout: 30000 });
+      await page.locator('#atlas-focus').click();
+      await page.waitForTimeout(1000);
+      assert.equal(await page.locator('#atlas-stage').getAttribute('data-mode'), 'pole');
+      assert.equal(await page.locator('#atlas-pins').isVisible(), true);
+      assert.equal(await page.locator('#atlas-pin-lines').isVisible(), true);
+      await page.locator('[data-atlas-pin="01"]').click();
+      assert.match(await page.locator('#atlas-enter').getAttribute('href'), /site=01/);
+      await page.locator('[data-atlas-site="04"]').click();
+      assert.equal(await page.locator('[data-atlas-site="04"]').getAttribute('aria-pressed'), 'true');
+      assert.match(await page.locator('#atlas-enter').getAttribute('href'), /site=04.*day=2026-11-19/);
+      await page.locator('#atlas-hour').fill('24');
+      assert.match(await page.locator('#atlas-time-label').textContent(), /15 NOV 2026/);
+      assert.match(await page.locator('#atlas-enter').getAttribute('href'), /day=2026-11-15/);
+      await page.locator('[data-lang="ru"]').click();
+      assert.match(await page.locator('#atlas-enter').getAttribute('href'), /lang=ru/);
+      await page.locator('#atlas-overview').click();
+      assert.equal(await page.locator('#atlas-stage').getAttribute('data-mode'), 'global');
+      await page.locator('#atlas-canvas').focus();
+      await page.keyboard.press('ArrowLeft');
+      await page.keyboard.press('+');
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width}px: atlas overflows horizontally`);
+      console.log(`Landing ${width}px: NASA globe, selection, time, language, layout OK`);
       await page.close();
     }
   } finally {

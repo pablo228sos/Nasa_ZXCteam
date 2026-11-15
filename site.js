@@ -5,49 +5,46 @@ const words = {
     navWhy: 'THE QUESTION', navExplore: 'EXPLORE', navMethod: 'METHOD',
     heroKicker: 'ZXC / LUNAR EXPLORATION STUDY', heroLine1: 'The Moon is a place.', heroLine2: 'Choose precisely.',
     heroDeck: 'Explore terrain that exists, light that moves, and the horizon that defines what a landing site can do.',
-    heroExplore: 'FIND A MISSION WINDOW', heroScience: 'SEE THE SCIENCE ↓', filmNotice: 'CINEMATIC ILLUSTRATION · NOT SURVEY DATA', scroll: 'SCROLL TO EXPLORE',
+    heroExplore: 'EXPLORE THE MOON', heroScience: 'SEE THE SCIENCE ↓', filmNotice: 'CINEMATIC ILLUSTRATION · NOT SURVEY DATA', scroll: 'SCROLL TO EXPLORE',
     question: 'THE QUESTION', premiseTitle: 'Coordinates are only<br>the beginning.', premiseBody: 'At the lunar south pole, a few kilometres can change sunlight and the path back to Earth. A useful site analysis has to connect terrain with time.',
     factorSun: 'Light meets the local horizon.', factorSunBody: 'Solar elevation alone is not enough. Nearby ridges decide when the surface actually receives light.',
     factorEarth: 'Earth has a horizon too.', factorEarthBody: 'Direct communication depends on whether Earth clears the terrain around a specific site.',
     factorTerrain: 'The terrain must be real.', factorTerrainBody: 'A visualisation only earns trust when its geometry, resolution and uncertainty can be traced to a source.',
-    terrainLabel: 'THE TERRAIN', terrainEyebrow: 'ONE LANDSCAPE · YOUR POINT', terrainBody: 'Find a moment with light and a path to Earth. Then move the study point: enter coordinates or choose nearby terrain in 3D and see how the answer changes.', terrainOpen: 'OPEN FULL 3D ANALYSIS',
-    stageNote: 'MEASURED 3D TERRAIN · OPEN TO EXPLORE', stageOpen: 'OPEN FULL SCREEN', previewOpen: 'EXPLORE THE MEASURED TERRAIN',
+    atlasLabel: 'LUNAR ATLAS', atlasEyebrow: 'THE ENTIRE MOON · THREE MEASURED SITES', atlasTitle: 'Choose a place.<br><em>Then test it.</em>', atlasIntro: 'Turn the Moon, move into the south pole, and choose a measured site. The global view gives context; each local study opens its own 5 m terrain analysis.',
+    atlasLoading: 'LOADING THE MOON…', atlasCluster: 'SOUTH POLE', atlasClusterCount: '03 MEASURED SITES ↗', atlasSun: 'SUN · VISUAL SYMBOL', atlasHint: 'DRAG TO ROTATE · SCROLL TO ZOOM', atlasChoose: 'CHOOSE A STUDY SITE', atlasFocus: 'FOCUS SOUTH POLE ↗', atlasOverview: 'FULL MOON', atlasEnter: 'OPEN THIS SITE IN 3D', atlasTime: 'SOLAR GEOMETRY · UTC', atlasPlay: '▶ PLAY LIGHT', atlasScale: 'SUN POSITION / VISUAL SIZE NOT TO SCALE', atlasBoundary: 'GLOBAL MAP FOR CONTEXT · LOCAL RESULTS USE SEPARATE 5 M LOLA GRIDS',
+    site07Short: 'Peak near Shackleton', site01Short: 'Connecting ridge', site04Short: 'Shackleton rim',
     compareLabel: 'THREE SITES, ONE CLOCK', compareTitle: 'The horizon<br><em>changes everything.</em>', compareBody: 'The same UTC samples, tested against three measured landscapes. Each strip shows local geometric visibility. Choose a site to see the ridge behind the answer.', comparePeriod: 'PERIOD · UTC',
     site07Name: '07 / PEAK NEAR SHACKLETON', site01Name: '01 / CONNECTING RIDGE', site04Name: '04 / SHACKLETON RIM', sharedHours: '/ 193 HOURLY SAMPLES', inspect3d: 'INSPECT IN 3D ↗', sunLabel: 'SUN', earthLabel: 'EARTH', bothLabel: 'BOTH',
     compareLimit: 'Hourly geometry · 8 km local horizon · not a power or communication forecast.',
     methodLabel: 'METHOD & LIMITS', sourceNote: 'SOURCES ARE PART OF THE INTERFACE', methodTitle: 'Wonder needs<br>ground truth.',
-    methodBody: 'The 3D scenes use NASA LOLA elevation models for Sites 01, 04 and 07; the preview shows Site04. The reference points use bundled JPL Horizons Sun and Earth positions. For a point you choose nearby, the app resamples the 5 m LOLA grid and rotates those directions into its local sky.',
-    methodLimit: 'The reference horizon reaches 8 km; a moved point uses a complete 6 km horizon inside the source tile. Roughly 90% of the 5 m grid is interpolated. The wide 3D mesh samples at 41.7 m. Surface tone and fill light reveal shape; the hero film is generated illustration, not a map.',
+    methodBody: 'The global Moon uses NASA LRO visual maps for geographic context. The detailed 3D scenes use separate NASA LOLA elevation models for Sites 01, 04 and 07. The reference points use bundled JPL Horizons Sun and Earth positions; nearby chosen points resample the local 5 m LOLA grid.',
+    methodLimit: 'The global globe is a visual atlas, not a 5 m simulator. Reference-site horizons reach 8 km; a moved point uses 6 km inside the local source tile. Roughly 90% of its 5 m pixels are interpolated. Sunlight direction in the atlas follows bundled JPL samples; the visible Sun symbol and distances are not to scale.',
     footer: 'A working visual study by ZXC for NASA Space Apps Challenge 2026.'
   },
   ru: {
     navWhy: 'ВОПРОС', navExplore: 'ИССЛЕДОВАТЬ', navMethod: 'МЕТОД',
     heroKicker: 'ZXC / ИССЛЕДОВАНИЕ ЛУНЫ', heroLine1: 'Луна — это место.', heroLine2: 'Выбирай точно.',
     heroDeck: 'Изучай реальный рельеф, движение света и линию горизонта, от которой зависят возможности площадки.',
-    heroExplore: 'НАЙТИ ОКНО МИССИИ', heroScience: 'КАК ЭТО РАБОТАЕТ ↓', filmNotice: 'КИНЕМАТОГРАФИЧНАЯ ИЛЛЮСТРАЦИЯ · НЕ КАРТА', scroll: 'ЛИСТАЙ ВНИЗ',
+    heroExplore: 'ИССЛЕДОВАТЬ ЛУНУ', heroScience: 'КАК ЭТО РАБОТАЕТ ↓', filmNotice: 'КИНЕМАТОГРАФИЧНАЯ ИЛЛЮСТРАЦИЯ · НЕ КАРТА', scroll: 'ЛИСТАЙ ВНИЗ',
     question: 'ЗАДАЧА', premiseTitle: 'Координаты — только<br>начало.', premiseBody: 'У южного полюса Луны несколько километров могут изменить освещённость и связь с Землёй. Анализ площадки должен связывать рельеф со временем.',
     factorSun: 'Свет зависит от горизонта.', factorSunBody: 'Одной высоты Солнца недостаточно. Соседние хребты определяют, когда поверхность действительно освещена.',
     factorEarth: 'У Земли тоже есть горизонт.', factorEarthBody: 'Прямая связь зависит от того, видна ли Земля над рельефом вокруг конкретной точки.',
     factorTerrain: 'Рельеф должен быть настоящим.', factorTerrainBody: 'Визуализация заслуживает доверия, когда известны источник геометрии, разрешение и ограничения данных.',
-    terrainLabel: 'РЕЛЬЕФ', terrainEyebrow: 'ОДИН РЕЛЬЕФ · ТВОЯ ТОЧКА', terrainBody: 'Найди час, когда есть свет и путь к Земле. Затем перемести точку: введи координаты или выбери место на 3D-рельефе и посмотри, как изменится ответ.', terrainOpen: 'ОТКРЫТЬ 3D-АНАЛИЗ',
-    stageNote: 'ИЗМЕРЕННЫЙ 3D-РЕЛЬЕФ · ОТКРОЙ ДЛЯ ИССЛЕДОВАНИЯ', stageOpen: 'НА ВЕСЬ ЭКРАН', previewOpen: 'ИССЛЕДОВАТЬ ИЗМЕРЕННЫЙ РЕЛЬЕФ',
+    atlasLabel: 'АТЛАС ЛУНЫ', atlasEyebrow: 'ВСЯ ЛУНА · ТРИ ИЗМЕРЕННЫХ УЧАСТКА', atlasTitle: 'Выбери место.<br><em>Проверь его.</em>', atlasIntro: 'Вращай Луну, приблизь южный полюс и выбери участок. Глобус показывает контекст, а каждый участок открывает отдельный анализ рельефа с шагом 5 м.',
+    atlasLoading: 'ЗАГРУЖАЕМ ЛУНУ…', atlasCluster: 'ЮЖНЫЙ ПОЛЮС', atlasClusterCount: '03 УЧАСТКА ↗', atlasSun: 'СОЛНЦЕ · УСЛОВНЫЙ ЗНАК', atlasHint: 'ПОВОРОТ · КОЛЕСО ДЛЯ МАСШТАБА', atlasChoose: 'ВЫБЕРИ УЧАСТОК', atlasFocus: 'ПРИБЛИЗИТЬ ЮЖНЫЙ ПОЛЮС ↗', atlasOverview: 'ВСЯ ЛУНА', atlasEnter: 'ОТКРЫТЬ УЧАСТОК В 3D', atlasTime: 'ПОЛОЖЕНИЕ СОЛНЦА · UTC', atlasPlay: '▶ ПОКАЗАТЬ СВЕТ', atlasScale: 'РАЗМЕР СОЛНЦА И ДИСТАНЦИЯ УСЛОВНЫ', atlasBoundary: 'ГЛОБУС ДЛЯ КОНТЕКСТА · ЛОКАЛЬНЫЙ АНАЛИЗ ПО ОТДЕЛЬНЫМ СЕТКАМ LOLA 5 М',
+    site07Short: 'Пик у Шеклтона', site01Short: 'Соединяющий хребет', site04Short: 'Край Шеклтона',
     compareLabel: 'ТРИ УЧАСТКА · ОДНО ВРЕМЯ', compareTitle: 'Горизонт<br><em>меняет всё.</em>', compareBody: 'Одни и те же часы UTC на трёх измеренных рельефах. Полосы показывают геометрическую видимость. Выбери участок, чтобы увидеть гребень за результатом.', comparePeriod: 'ПЕРИОД · UTC',
     site07Name: '07 / ПИК У ШЕКЛТОНА', site01Name: '01 / СОЕДИНЯЮЩИЙ ГРЕБЕНЬ', site04Name: '04 / КРАЙ ШЕКЛТОНА', sharedHours: '/ 193 ЧАСОВЫХ ОТСЧЁТОВ', inspect3d: 'СМОТРЕТЬ В 3D ↗', sunLabel: 'СОЛНЦЕ', earthLabel: 'ЗЕМЛЯ', bothLabel: 'ОБА',
     compareLimit: 'Часовой шаг · горизонт до 8 км · не прогноз энергии или радиосвязи.',
     methodLabel: 'МЕТОД И ГРАНИЦЫ', sourceNote: 'ИСТОЧНИКИ — ЧАСТЬ ИНТЕРФЕЙСА', methodTitle: 'Впечатлению нужна<br>опора на данные.',
-    methodBody: '3D-сцены построены из моделей высот NASA LOLA для участков 01, 04 и 07; здесь показан Site04. Для опорных точек загружены положения Солнца и Земли JPL Horizons. Для выбранной рядом точки приложение заново считывает 5-метровый рельеф и переводит эти направления в её локальное небо.',
-    methodLimit: 'Горизонт опорной точки охватывает 8 км, сдвинутой — 6 км внутри исходного участка. Около 90% пикселей сетки 5 м интерполированы. Широкая 3D-сетка имеет шаг 41,7 м. Цвет помогает прочитать форму; видео на первом экране — иллюстрация, не карта.',
+    methodBody: 'Глобус использует визуальные карты NASA LRO для географического контекста. Подробные 3D-сцены участков 01, 04 и 07 построены из отдельных моделей высот NASA LOLA. Для опорных точек загружены положения Солнца и Земли JPL Horizons; соседние выбранные точки пересчитываются по локальной сетке LOLA с шагом 5 м.',
+    methodLimit: 'Глобус — визуальный атлас, а не симулятор с шагом 5 м. Горизонт опорной точки охватывает 8 км, сдвинутой — 6 км внутри исходного участка. Около 90% пикселей сетки 5 м интерполированы. Направление света в атласе следует данным JPL; видимый знак Солнца и расстояния показаны не в масштабе.',
     footer: 'Рабочее визуальное исследование команды ZXC для NASA Space Apps Challenge 2026.'
   }
 };
 
 const header = document.getElementById('site-header');
 const heroVideo = document.getElementById('hero-video');
-const scienceLink = document.getElementById('science-link');
-const scienceLinkBottom = document.getElementById('science-link-bottom');
-const scienceMobilePreview = document.getElementById('science-mobile-preview');
-const heroMissionLink = document.getElementById('hero-mission-link');
-const sciencePreview = document.getElementById('science-preview');
 const comparisonDaySelect = document.getElementById('comparison-day');
 const comparisonData = new Map();
 const validComparisonDays = Array.from({ length: 8 }, (_, index) => `2026-11-${String(14 + index).padStart(2, '0')}`);
@@ -60,7 +57,7 @@ function setLanguage(lang) {
   document.documentElement.lang = lang;
   for (const element of document.querySelectorAll('[data-i18n]')) {
     const key = element.dataset.i18n;
-    if (key === 'premiseTitle' || key === 'methodTitle' || key === 'compareTitle') element.innerHTML = words[lang][key];
+    if (key === 'premiseTitle' || key === 'methodTitle' || key === 'compareTitle' || key === 'atlasTitle') element.innerHTML = words[lang][key];
     else element.textContent = words[lang][key];
   }
   for (const button of document.querySelectorAll('[data-lang]')) {
@@ -68,25 +65,12 @@ function setLanguage(lang) {
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
   }
-  const scienceParams = new URLSearchParams();
-  if (lang === 'ru') scienceParams.set('lang', 'ru');
-  if (comparisonDay !== 'all') scienceParams.set('day', comparisonDay);
-  const scienceUrl = `./science/${scienceParams.size ? `?${scienceParams}` : ''}`;
-  scienceLink.href = scienceUrl;
-  scienceLinkBottom.href = scienceUrl;
-  scienceMobilePreview.href = scienceUrl;
-  heroMissionLink.href = `./science/?site=07&find=1${comparisonDay === 'all' ? '' : `&day=${comparisonDay}`}${lang === 'ru' ? '&lang=ru' : ''}`;
   for (const card of document.querySelectorAll('.site-card')) {
     card.href = `./science/?site=${card.dataset.site}&find=1${comparisonDay === 'all' ? '' : `&day=${comparisonDay}`}${lang === 'ru' ? '&lang=ru' : ''}`;
   }
   updateComparisonOptions(lang);
   renderComparison();
-  if (sciencePreview.dataset.currentLang !== lang) {
-    sciencePreview.dataset.currentLang = lang;
-    const embeddedUrl = `${scienceUrl}${scienceUrl.includes('?') ? '&' : '?'}embed=1`;
-    sciencePreview.dataset.pendingSrc = embeddedUrl;
-    if (sciencePreview.dataset.loaded === 'true') sciencePreview.src = embeddedUrl;
-  }
+  window.dispatchEvent(new CustomEvent('luna:language', { detail: { lang } }));
   try { localStorage.setItem('luna-view-lang', lang); } catch { /* private mode */ }
 }
 
@@ -187,33 +171,6 @@ if (comparison && 'IntersectionObserver' in window) {
   }, { rootMargin: '500px 0px' });
   comparisonLoad.observe(comparison);
 } else if (comparison) loadComparison();
-
-const scienceStage = document.querySelector('.science-stage');
-let scienceVisible = false;
-let previewNear = false;
-const compactPreview = window.matchMedia('(max-width: 1100px)');
-function loadPreviewIfNeeded() {
-  if (!previewNear || compactPreview.matches || sciencePreview.dataset.loaded === 'true') return;
-  sciencePreview.dataset.loaded = 'true';
-  sciencePreview.src = sciencePreview.dataset.pendingSrc;
-}
-compactPreview.addEventListener('change', loadPreviewIfNeeded);
-const sendScienceVisibility = () => {
-  if (sciencePreview.dataset.loaded === 'true') sciencePreview.contentWindow?.postMessage({ type: 'luna-visibility', active: scienceVisible }, location.origin);
-};
-sciencePreview.addEventListener('load', sendScienceVisibility);
-if ('IntersectionObserver' in window) {
-  const loadScene = new IntersectionObserver((entries, observer) => {
-    if (entries[0].isIntersecting) {
-      previewNear = true;
-      loadPreviewIfNeeded();
-      observer.disconnect();
-    }
-  }, { rootMargin: '800px 0px' });
-  loadScene.observe(scienceStage);
-  const sceneVisibility = new IntersectionObserver((entries) => { scienceVisible = entries[0].isIntersecting; sendScienceVisibility(); }, { threshold: .01 });
-  sceneVisibility.observe(scienceStage);
-} else { scienceVisible = true; previewNear = true; loadPreviewIfNeeded(); }
 
 function updateHeader() { header.classList.toggle('scrolled', window.scrollY > 32); }
 window.addEventListener('scroll', updateHeader, { passive: true });
