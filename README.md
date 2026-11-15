@@ -18,6 +18,10 @@ Explore three lunar south-pole study points in measured 3D terrain. Find hourly 
 
 *On phones, “Show why” opens the terrain with the measured horizon ridge marked, its distance and angular clearances, a UTC scrubber, and a direct return to the result.*
 
+[![Site07 what-if comparison: a 2 m antenna changes the local Earth visibility result to 133 of 193 hourly samples](docs/screenshots/antenna-scenario.png)](https://pablo228sos.github.io/Nasa_ZXCteam/science/?site=07&find=1&antenna=2)
+
+*What if the antenna is raised? The 2 m setting recomputes the Earth terrain horizon while sunlight remains evaluated at the ground. This is a local geometric scenario, not a radio link budget.*
+
 ## Try the mission-window flow
 
 1. Open the live app and choose a UTC day in the three-site comparison.
@@ -44,7 +48,8 @@ For the browser interaction check, install Node dependencies with `npm ci`, then
 - An approximate local terrain-horizon test for the chosen point, evaluated every degree of azimuth and every 50 m out to 8 km, including lunar curvature.
 - A height-error sensitivity check derived from each site's NASA PGDA **total-Z RMS uncertainty GeoTIFF**. Along every horizon ray, the screen also tests an upper horizon formed by raising ridge samples and lowering the observer by one reported RMS each. For the full interval, **Site01 18/42** and **Site07 80/95** geometric shared samples remain above that upper local horizon; Site04 has no geometric overlap. This envelope is deliberately adverse but is **not** a statistical confidence interval or a communication guarantee.
 - **Find a mission window** checks either all 193 hourly samples or one selected UTC day for simultaneous geometric sunlight and Earth visibility. The selected date is retained when switching sites and in the URL. The result reports the longest run of shared samples and identifies the hour maximizing the smaller of the Sun and Earth angular clearances. The explanation marks the measured ridge and draws the matching horizon profile. An optional 2 × 2 km close-up loads a separate 401 × 401 mesh from the same NASA TIFF only when requested; its 5 m grid does not imply 5 m independent measurement accuracy. For the full interval, shared samples are **Site04 0/193, Site01 42/193, Site07 95/193**. Site07's longest sampled run is **18 Nov 02:00 through 22 Nov 00:00 UTC**; its best balanced sample is **19 Nov 10:00 UTC**, with a minimum clearance of **1.90°**. These are geometric samples, not verified continuous communication or power windows.
-- An evidence CSV download includes the selected interval's timestamps, observer coordinates, Sun/Earth angles, directional terrain horizons, visibility flags, lower/upper height-error sensitivity horizons and source URLs for the selected site. A day exports 24 rows; the full interval exports 193.
+- The **antenna-height what-if** control compares 0, 2 and 5 m above the same study point. It recomputes the Earth horizon from the stored 50 m directional terrain profiles and updates the result, UTC chart, 3D ridge explanation, shareable URL and CSV. Ground sunlight does not change. For the full interval, Site07 has **95/193** shared samples at 0 m, **133/193** at 2 m, and **160/193** at 5 m. Site04 still has no shared sample at these heights. This comparison is exploratory: the profile angles are rounded to 0.01°, the horizon covers only 8 km, and the 1-RMS height-error envelope has not been recomputed above the surface.
+- An evidence CSV download includes the selected interval's timestamps, observer coordinates, antenna height, Sun/Earth angles, directional terrain horizons, visibility flags and source URLs. The ground-level export also includes lower/upper height-error sensitivity horizons; those columns are blank for raised antennas because that envelope has not been recalculated. A day exports 24 rows; the full interval exports 193.
 - Source and display-resolution disclosures in the interface, including source links in the science panel on phones. The generated hero video is explicitly marked as illustration.
 
 ## Scientific provenance and limits
@@ -57,6 +62,7 @@ For the browser interaction check, install Node dependencies with `npm ci`, then
 | Observer | Site04 center: 89.766811° S, 188.130102° E, +769.68 m. Site01 center: 89.463163° S, 222.510447° E, +1944.83 m. Site07 center: 88.811008° S, 123.690068° E, +1645.25 m. Heights are bilinearly sampled at the exact center coordinates, relative to the 1737.4 km lunar reference radius. |
 | Ephemeris | [JPL Horizons](https://ssd.jpl.nasa.gov/horizons/) topocentric observer at each site, targets Sun (10) and Earth (399), quantity 4 apparent azimuth/elevation, hourly UTC samples. Site-specific values are bundled in `science/luna_view_site01_data.json`, `science/luna_view_site04_data.json` and `science/luna_view_site07_data.json`. |
 | Horizon | Bilinear samples of this DEM along 360 radial directions, with Moon curvature correction. Each direction also records the range and height of the highest blocking ridge. The test considers relief within 8 km only; it is not a complete direct-to-Earth availability prediction. |
+| Raised antenna | At 2 or 5 m, each terrain-ray elevation is recalculated as `atan(tan(surface_angle) − antenna_height / range)`, and the highest adjusted ray becomes the Earth horizon. Sunlight stays at ground level. The [independent TIFF check](scripts/verify_antenna_scenario.py) reproduces all three sites' sample counts at both heights; the largest angular difference from the source DEM is 0.0051° or less, attributable to the stored profile rounding. The RMS sensitivity result is shown only for the 0 m baseline. |
 | Height-error sensitivity | [NASA PGDA total-Z RMS uncertainty maps](https://pgda.gsfc.nasa.gov/products/78) for the same three 5 m grids. For each ray, lower/upper horizons come from moving the observer and each sampled terrain height by ±1 reported RMS in opposite directions, then taking the highest ray angle. This is a local input sensitivity envelope, **not** a probability, confidence interval or correction for relief beyond 8 km. The source URL and observer RMS are in each site's JSON. |
 | Editorial light and color | A fill light and procedural surface tone reveal shape. Neither is a measured reflectance product. Sun direction is ephemeris-driven. |
 | Film | `media/earth-rim-loop.mp4` was generated in Google Flow with Omni 1.2 Flash at native 720p, upscaled by Google to 1080p, then locally retimed into a 30-second seamless presentation loop. A separate 720p encode serves phones. The Earth size, crater geometry and stars are **artistic**, not a reconstruction of any study site. Earlier Gemini studies are retained in `media/` for comparison. |
@@ -94,6 +100,14 @@ python scripts/validate_source_spots.py
 
 This independently reads each site center from the source DEM and total-Z RMS map, reprojects its coordinates, and compares one UTC hour of Sun and Earth angles against fresh Horizons responses. It does not independently validate the orbital model or all 193 hours.
 
+With the three original surface TIFFs present in `.cache/`, verify the 2 m and 5 m antenna scenarios directly against those DEMs:
+
+```sh
+python scripts/verify_antenna_scenario.py
+```
+
+This checks all 360 directions for each site and confirms that the 193-sample overlap counts agree with the browser's rounded-profile calculation.
+
 ## Repository map
 
 ```text
@@ -105,6 +119,8 @@ scripts/augment_horizon_blockers.py Local augmentation from the source TIFF
 scripts/verify_site_data.py        Offline data-consistency check
 scripts/augment_height_sensitivity.py  NASA total-Z RMS sensitivity envelope
 scripts/validate_source_spots.py   Source DEM and fresh JPL spot-check
+scripts/verify_antenna_scenario.py  Independent raised-antenna DEM check
+scripts/smoke-ui.cjs             Chrome interaction and responsive-layout check
 scripts/build_close_detail.py       Optional 2 km mesh from the cached source DEM
 licenses/three-LICENSE.txt         License for bundled Three.js r180 modules
 ROADMAP.md                         Next implementation gates

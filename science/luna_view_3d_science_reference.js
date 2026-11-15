@@ -7,6 +7,7 @@ const siteId = ['01', '04', '07'].includes(query.get('site')) ? query.get('site'
 const compareTarget = siteId === '04' ? '07' : '04';
 let locale = query.get('lang') === 'ru' ? 'ru' : 'en';
 let selectedDay = /^2026-11-(1[4-9]|2[01])$/.test(query.get('day') || '') ? query.get('day') : 'all';
+let antennaHeight = [0, 2, 5].includes(Number(query.get('antenna'))) ? Number(query.get('antenna')) : 0;
 const selectionBounds = () => selectedDay === 'all' ? [0, 192] : [(Number(selectedDay.slice(-2)) - 14) * 24, (Number(selectedDay.slice(-2)) - 14) * 24 + 23];
 const siteChoice = document.createElement('label');
 siteChoice.className = 'site-choice';
@@ -33,6 +34,18 @@ exportButton.type = 'button';
 exportButton.textContent = 'DOWNLOAD HOURLY EVIDENCE CSV ↓';
 $('mission-limit').after(exportButton);
 $('mission-detail').after($('show-why'));
+const antennaScenario = document.createElement('div');
+antennaScenario.className = 'antenna-scenario';
+antennaScenario.innerHTML = '<span id="antenna-label">WHAT IF THE ANTENNA WERE HIGHER?</span><div class="antenna-options" role="group" aria-label="Antenna height above the surface"><button type="button" data-antenna="0">0 M</button><button type="button" data-antenna="2">2 M</button><button type="button" data-antenna="5">5 M</button></div><p id="antenna-impact"></p><small id="antenna-method">Earth line of sight changes; ground sunlight does not. Local geometry only.</small>';
+$('show-why').after(antennaScenario);
+function updateAntennaButtons() {
+  for (const button of antennaScenario.querySelectorAll('button')) {
+    const active = Number(button.dataset.antenna) === antennaHeight;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  }
+}
+updateAntennaButtons();
 const copy = {
   en: {
     sunLit: 'SUN ABOVE LOCAL TERRAIN', sunBlocked: 'SUN BLOCKED BY LOCAL TERRAIN',
@@ -70,6 +83,9 @@ function translateStatic() {
   document.querySelector('.panel-title').textContent = 'Свет и видимость';
   $('mission-kicker').textContent = '01 / ОКНО МИССИИ';
   $('mission-title').textContent = 'Найди время, когда есть свет и путь к Земле.';
+  $('antenna-label').textContent = 'А ЕСЛИ ПОДНЯТЬ АНТЕННУ?';
+  antennaScenario.querySelector('.antenna-options').setAttribute('aria-label', 'Высота антенны над поверхностью');
+  $('antenna-method').textContent = 'Меняется видимость Земли; освещение поверхности прежнее. Только местная геометрия.';
   $('back-to-result').textContent = 'К РЕЗУЛЬТАТУ ↓';
   $('find-window').innerHTML = 'НАЙТИ ОКНО МИССИИ <span>↗</span>';
   $('show-why').textContent = 'ПОКАЗАТЬ ПРИЧИНУ НА РЕЛЬЕФЕ ↗';
@@ -95,6 +111,7 @@ function openSite(nextSite, nextLocale = locale, autoFind = false) {
   params.set('site', nextSite);
   if (nextLocale === 'ru') params.set('lang', 'ru');
   if (selectedDay !== 'all') params.set('day', selectedDay);
+  if (antennaHeight) params.set('antenna', String(antennaHeight));
   if (autoFind) params.set('find', '1');
   location.href = `${location.pathname}${params.size ? `?${params}` : ''}`;
 }
@@ -129,21 +146,21 @@ $('day-choice').addEventListener('change', event => {
 });
 exportButton.addEventListener('click', () => {
   if (!data || !missionEvaluated) return;
-  const rows = [['site_id','site_lat_deg','site_lon_e_deg','observer_height_m','utc','sun_azimuth_deg','sun_elevation_deg','sun_terrain_horizon_deg','sun_above','earth_azimuth_deg','earth_elevation_deg','earth_terrain_horizon_deg','earth_above','both','sun_horizon_lower_1rms_deg','sun_horizon_upper_1rms_deg','earth_horizon_lower_1rms_deg','earth_horizon_upper_1rms_deg','both_above_upper_1rms','dem_source','ephemeris_source','height_rms_source']];
+  const rows = [['site_id','site_lat_deg','site_lon_e_deg','observer_height_m','antenna_height_m','utc','sun_azimuth_deg','sun_elevation_deg','sun_terrain_horizon_deg','sun_above','earth_azimuth_deg','earth_elevation_deg','earth_terrain_horizon_deg','earth_above','both','sun_horizon_lower_1rms_deg','sun_horizon_upper_1rms_deg','earth_horizon_lower_1rms_deg','earth_horizon_upper_1rms_deg','both_above_upper_1rms','dem_source','ephemeris_source','height_rms_source']];
   const [start, end] = selectionBounds();
   data.sun.slice(start, end + 1).forEach((sun, offset) => {
     const index = start + offset;
     const earth = data.earth[index];
     const [sunAbove, earthAbove] = statusAt(index);
     const sunDirection = Math.round(sun[1]) % 360, earthDirection = Math.round(earth[1]) % 360;
-    const lower = data.horizon_lower_1rms_deg, upper = data.horizon_upper_1rms_deg;
-    rows.push([siteId, data.site.lat_deg, data.site.lon_e_deg, data.site.height_m, sun[0], sun[1], sun[2], data.horizon_elevation_deg[sunDirection], sunAbove, earth[1], earth[2], data.horizon_elevation_deg[earthDirection], earthAbove, sunAbove && earthAbove, lower?.[sunDirection] ?? '', upper?.[sunDirection] ?? '', lower?.[earthDirection] ?? '', upper?.[earthDirection] ?? '', upper ? sun[2] > upper[sunDirection] && earth[2] > upper[earthDirection] : '', data.source_download_url, data.horizons_url, data.height_rms_source_url ?? '']);
+    const lower = antennaHeight === 0 ? data.horizon_lower_1rms_deg : null, upper = antennaHeight === 0 ? data.horizon_upper_1rms_deg : null;
+    rows.push([siteId, data.site.lat_deg, data.site.lon_e_deg, data.site.height_m, antennaHeight, sun[0], sun[1], sun[2], data.horizon_elevation_deg[sunDirection], sunAbove, earth[1], earth[2], earthHorizonByAzimuth[earthDirection], earthAbove, sunAbove && earthAbove, lower?.[sunDirection] ?? '', upper?.[sunDirection] ?? '', lower?.[earthDirection] ?? '', upper?.[earthDirection] ?? '', upper ? sun[2] > upper[sunDirection] && earth[2] > upper[earthDirection] : '', data.source_download_url, data.horizons_url, data.height_rms_source_url ?? '']);
   });
   const blob = new Blob([rows.map(row => row.join(',')).join('\n')], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `luna-view-site${siteId}-hourly-${selectedDay === 'all' ? '2026-11-14-to-22' : selectedDay}.csv`;
+  link.download = `luna-view-site${siteId}-hourly-${selectedDay === 'all' ? '2026-11-14-to-22' : selectedDay}-antenna-${antennaHeight}m.csv`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 });
@@ -209,6 +226,7 @@ updateSelectedRange();
 const target = new THREE.Vector3(0, -420, 0);
 const eye = new THREE.Vector3();
 let terrain, closeTerrain, closeColors, siteMarkerParts, data, surfaceColors, elevationColors, slopeColors;
+let earthProfiles, earthHorizonByAzimuth, earthBlockerByAzimuth;
 let evidenceLine, blockerMarker, blockerHalo, detailButton, missionEvaluated = false, explanationActive = false;
 let detailActive = false;
 const focusTarget = new THREE.Vector3(0, -420, 0);
@@ -359,6 +377,47 @@ function makeCloseTerrain(raw) {
 function selectedRangeLabel() {
   return selectedDay === 'all' ? (locale === 'ru' ? '14–22 ноя 2026 UTC' : '14–22 Nov 2026 UTC') : `${Number(selectedDay.slice(-2))} ${locale === 'ru' ? 'ноя' : 'Nov'} 2026 UTC`;
 }
+function recalculateEarthHorizon() {
+  if (!data) return;
+  earthProfiles = antennaHeight === 0 ? data.horizon_profile_deg : data.horizon_profile_deg.map(profile => profile.map((angle, index) => {
+    const distance = (index + 1) * 50;
+    return Math.atan(Math.tan(angle * Math.PI / 180) - antennaHeight / distance) * 180 / Math.PI;
+  }));
+  earthHorizonByAzimuth = antennaHeight === 0 ? data.horizon_elevation_deg : [];
+  earthBlockerByAzimuth = [];
+  for (let azimuth = 0; azimuth < 360; azimuth++) {
+    if (antennaHeight === 0) {
+      earthBlockerByAzimuth.push(Math.round(data.horizon_distance_m[azimuth] / 50) - 1);
+      continue;
+    }
+    let bestIndex = 0;
+    for (let index = 1; index < earthProfiles[azimuth].length; index++) {
+      if (earthProfiles[azimuth][index] > earthProfiles[azimuth][bestIndex]) bestIndex = index;
+    }
+    earthBlockerByAzimuth.push(bestIndex);
+    earthHorizonByAzimuth.push(earthProfiles[azimuth][bestIndex]);
+  }
+}
+antennaScenario.addEventListener('click', event => {
+  const button = event.target.closest('button[data-antenna]');
+  if (!button || !data) return;
+  antennaHeight = Number(button.dataset.antenna);
+  updateAntennaButtons();
+  const params = new URLSearchParams(location.search);
+  if (antennaHeight) params.set('antenna', String(antennaHeight)); else params.delete('antenna');
+  history.replaceState(null, '', `${location.pathname}${params.size ? `?${params}` : ''}`);
+  if (detailActive) {
+    detailActive = false;
+    terrain.visible = true;
+    if (closeTerrain) closeTerrain.visible = false;
+    setSiteMarkerScale(false);
+    state.targetRadius = 7200;
+    if (detailButton) detailButton.textContent = locale === 'ru' ? 'ПОКАЗАТЬ 3D-ДЕТАЛЬ 2 КМ ↗' : 'SHOW 2 KM 3D DETAIL ↗';
+  }
+  recalculateEarthHorizon();
+  findMissionWindow();
+  updateTime();
+});
 function updateSelectedRange() {
   const [start, end] = selectionBounds();
   $('time').min = start;
@@ -372,12 +431,12 @@ function updateTime() {
   const index = Math.round(state.time);
   const sun = data.sun[index], earth = data.earth[index];
   const sunHorizon = data.horizon_elevation_deg[Math.round(sun[1]) % 360];
-  const earthHorizon = data.horizon_elevation_deg[Math.round(earth[1]) % 360];
+  const earthHorizon = earthHorizonByAzimuth[Math.round(earth[1]) % 360];
   const fmt = (n) => `${n >= 0 ? '+' : '−'}${Math.abs(n).toFixed(1)}°`;
   $('sun-el').textContent = fmt(sun[2]);
   $('earth-el').textContent = fmt(earth[2]);
   $('sun-horizon').textContent = `${copy[locale].horizon} ${sun[1].toFixed(1)}° ${copy[locale].azimuth}: ${fmt(sunHorizon)}`;
-  $('earth-horizon').textContent = `${copy[locale].horizon} ${earth[1].toFixed(1)}° ${copy[locale].azimuth}: ${fmt(earthHorizon)}`;
+  $('earth-horizon').textContent = `${copy[locale].horizon} ${earth[1].toFixed(1)}° ${copy[locale].azimuth}: ${fmt(earthHorizon)} · ${antennaHeight} ${locale === 'ru' ? 'м' : 'm'} ${locale === 'ru' ? 'антенна' : 'antenna'}`;
   $('sun-status').textContent = sun[2] > sunHorizon ? copy[locale].sunLit : copy[locale].sunBlocked;
   $('earth-status').textContent = earth[2] > earthHorizon ? copy[locale].earthClear : copy[locale].earthBlocked;
   const date = new Date(Date.UTC(2026, 10, 14, index));
@@ -399,7 +458,7 @@ function updateTime() {
 
 function statusAt(index) {
   const sun = data.sun[index], earth = data.earth[index];
-  return [sun[2] > data.horizon_elevation_deg[Math.round(sun[1]) % 360], earth[2] > data.horizon_elevation_deg[Math.round(earth[1]) % 360]];
+  return [sun[2] > data.horizon_elevation_deg[Math.round(sun[1]) % 360], earth[2] > earthHorizonByAzimuth[Math.round(earth[1]) % 360]];
 }
 
 function hourLabel(index) {
@@ -414,7 +473,7 @@ function bestGeometricHour() {
   for (let index = start; index <= end; index++) {
     const earth = data.earth[index];
     const sun = data.sun[index];
-    const earthGap = earth[2] - data.horizon_elevation_deg[Math.round(earth[1]) % 360];
+    const earthGap = earth[2] - earthHorizonByAzimuth[Math.round(earth[1]) % 360];
     const sunGap = sun[2] - data.horizon_elevation_deg[Math.round(sun[1]) % 360];
     const margin = Math.min(sunGap, earthGap);
     if (margin > bestMargin) { bestMargin = margin; best = index; }
@@ -423,7 +482,7 @@ function bestGeometricHour() {
 }
 
 function renderEvidenceProfile(azimuth, earthElevation, blockerDistance) {
-  const profile = data.horizon_profile_deg[azimuth];
+  const profile = earthProfiles[azimuth];
   const lowest = Math.min(earthElevation, ...profile) - 1.5;
   const highest = Math.max(earthElevation, ...profile) + 1.5;
   const width = 280, height = 100, left = 10, right = 270, top = 13, bottom = 75;
@@ -433,7 +492,7 @@ function renderEvidenceProfile(azimuth, earthElevation, blockerDistance) {
   const points = profile.map((angle, index) => `${px(index).toFixed(1)},${py(angle).toFixed(1)}`).join(' ');
   const rayY = py(earthElevation).toFixed(1);
   const ridgeX = px(ridge).toFixed(1), ridgeY = py(profile[ridge]).toFixed(1);
-  const label = locale === 'ru' ? 'ПРОФИЛЬ РЕЛЬЕФА / ЛИНИЯ НА ЗЕМЛЮ' : 'TERRAIN PROFILE / LINE TO EARTH';
+  const label = `${locale === 'ru' ? 'ПРОФИЛЬ РЕЛЬЕФА / ЛИНИЯ НА ЗЕМЛЮ' : 'TERRAIN PROFILE / LINE TO EARTH'} · ${antennaHeight} ${locale === 'ru' ? 'М' : 'M'}`;
   const range = locale === 'ru' ? '8 КМ' : '8 KM';
   const distanceText = blockerDistance < 1000 ? `${blockerDistance.toFixed(0)} ${locale === 'ru' ? 'М' : 'M'}` : `${(blockerDistance / 1000).toFixed(1)} ${locale === 'ru' ? 'КМ' : 'KM'}`;
   const container = $('mission-profile');
@@ -444,26 +503,28 @@ function renderEvidenceProfile(azimuth, earthElevation, blockerDistance) {
 function updateEvidence(index) {
   const earth = data.earth[index];
   const azimuth = Math.round(earth[1]) % 360;
-  const distance = data.horizon_distance_m[azimuth];
-  const height = data.horizon_height_m[azimuth] - data.site.height_m;
+  const blockerIndex = earthBlockerByAzimuth[azimuth];
+  const distance = (blockerIndex + 1) * 50;
+  const height = antennaHeight === 0 ? data.horizon_height_m[azimuth] - data.site.height_m : distance * Math.tan(data.horizon_profile_deg[azimuth][blockerIndex] * Math.PI / 180) + distance * distance / (2 * 1_737_400);
   const az = earth[1] * Math.PI / 180;
   const x = distance * (data.east_xy[0] * Math.sin(az) + data.north_xy[0] * Math.cos(az));
   const z = -distance * (data.east_xy[1] * Math.sin(az) + data.north_xy[1] * Math.cos(az));
-  const rayHeight = distance * Math.tan(earth[2] * Math.PI / 180) + distance * distance / (2 * 1_737_400);
-  evidenceLine.geometry.setFromPoints([new THREE.Vector3(0, detailActive ? 8 : 36, 0), new THREE.Vector3(x, rayHeight + (detailActive ? 8 : 0), z)]);
+  const rayHeight = antennaHeight + distance * Math.tan(earth[2] * Math.PI / 180) + distance * distance / (2 * 1_737_400);
+  evidenceLine.geometry.setFromPoints([new THREE.Vector3(0, antennaHeight + (detailActive ? 8 : 36), 0), new THREE.Vector3(x, rayHeight + (detailActive ? 8 : 0), z)]);
   blockerMarker.position.set(x, height + (detailActive ? 8 : 44), z);
   blockerHalo.position.copy(blockerMarker.position);
   const markerScale = detailActive ? 8 : clamp(distance * .06, window.innerWidth < 700 ? 110 : 36, 260);
   blockerHalo.scale.setScalar(markerScale / 80);
   blockerMarker.scale.setScalar(markerScale / 80);
   focusTarget.set(x * .48, height * .22, z * .48);
-  const gap = data.horizon_elevation_deg[azimuth] - earth[2];
+  const gap = earthHorizonByAzimuth[azimuth] - earth[2];
   const sun = data.sun[index];
   const sunGap = sun[2] - data.horizon_elevation_deg[Math.round(sun[1]) % 360];
   const distanceText = distance < 1000 ? `${distance.toFixed(0)} ${locale === 'ru' ? 'М' : 'M'}` : `${(distance / 1000).toFixed(1)} ${locale === 'ru' ? 'КМ' : 'KM'}`;
   $('mission-detail').textContent = gap > 0 ? missionText[locale].blocked(gap, distanceText) : missionText[locale].clear(-gap, sunGap);
   $('evidence-callout').textContent = `${gap > 0 ? (locale === 'ru' ? 'ЗАКРЫВАЮЩИЙ ГРЕБЕНЬ' : 'BLOCKING RIDGE') : (locale === 'ru' ? 'ГРЕБЕНЬ ГОРИЗОНТА' : 'HORIZON RIDGE')} · ${distanceText}`;
   $('mobile-evidence-title').textContent = $('evidence-callout').textContent;
+  $('mobile-evidence-label').textContent = `${locale === 'ru' ? 'РЕЛЬЕФ / УЧАСТОК' : 'TERRAIN EVIDENCE / SITE'} ${siteId} · ${antennaHeight} ${locale === 'ru' ? 'М АНТЕННА' : 'M ANTENNA'}`;
   $('mobile-evidence-detail').textContent = $('mission-detail').textContent;
   renderEvidenceProfile(azimuth, earth[2], distance);
 }
@@ -488,10 +549,23 @@ function findMissionWindow() {
   $('mission-summary').textContent = longest ? missionText[locale].found(hourLabel(rangeStart + longest[0]), hourLabel(rangeStart + longest[1]), longest[1] - longest[0] + 1) : missionText[locale].none;
   const sharedCount = shared.filter(Boolean).length;
   $('mission-detail').textContent = missionText[locale].detail(sunlight, earth, sharedCount, hourLabel(best), margin, samples.length);
+  const baselineSharedCount = antennaHeight === 0 ? sharedCount : data.sun.slice(rangeStart, rangeEnd + 1).reduce((count, sun, offset) => {
+    const earthSample = data.earth[rangeStart + offset];
+    return count + Number(sun[2] > data.horizon_elevation_deg[Math.round(sun[1]) % 360] && earthSample[2] > data.horizon_elevation_deg[Math.round(earthSample[1]) % 360]);
+  }, 0);
+  const gained = sharedCount - baselineSharedCount;
+  $('antenna-impact').textContent = locale === 'ru'
+    ? `${antennaHeight} м: Земля видна ${earth}/${samples.length} отсчётов; общее окно ${sharedCount}/${samples.length} (${gained >= 0 ? '+' : ''}${gained} к уровню поверхности).`
+    : `${antennaHeight} m: Earth visible ${earth}/${samples.length} samples; shared ${sharedCount}/${samples.length} (${gained >= 0 ? '+' : ''}${gained} vs surface).`;
+  $('antenna-method').textContent = antennaHeight === 0
+    ? (locale === 'ru' ? 'Высота антенны меняет видимость Земли; освещение поверхности прежнее.' : 'Antenna height changes Earth visibility; ground sunlight stays the same.')
+    : (locale === 'ru' ? 'Местная геометрия до 8 км · профиль с шагом 50 м, округление углов 0,01°. Освещение поверхности прежнее.' : 'Local 8 km geometry · 50 m ray samples, angles rounded to 0.01°. Ground sunlight is unchanged.');
   const sensitivity = $('mission-sensitivity');
   const upper = data.horizon_upper_1rms_deg;
-  sensitivity.hidden = !sharedCount || !Array.isArray(upper);
-  if (!sensitivity.hidden) {
+  sensitivity.hidden = antennaHeight === 0 && (!sharedCount || !Array.isArray(upper));
+  if (antennaHeight > 0) {
+    sensitivity.textContent = locale === 'ru' ? 'Высотная неопределённость LOLA для нового положения антенны здесь не пересчитана. Сравнение остаётся исследовательским.' : 'LOLA height uncertainty has not been recomputed for the raised antenna. Treat this as an exploratory comparison.';
+  } else if (!sensitivity.hidden) {
     const beyondBand = data.sun.slice(rangeStart, rangeEnd + 1).reduce((count, sun, offset) => {
       const earthSample = data.earth[rangeStart + offset];
       return count + Number(sun[2] > upper[Math.round(sun[1]) % 360] && earthSample[2] > upper[Math.round(earthSample[1]) % 360]);
@@ -559,7 +633,7 @@ function showWhy() {
   evidenceLine.visible = true; blockerMarker.visible = true; blockerHalo.visible = true;
   state.time = bestGeometricHour()[0];
   const azimuth = Math.round(data.earth[Math.round(state.time)][1]) % 360;
-  const distance = data.horizon_distance_m[azimuth];
+  const distance = (earthBlockerByAzimuth[azimuth] + 1) * 50;
   updateTime();
   const mobile = window.matchMedia('(max-width: 700px)').matches;
   state.targetRadius = mobile ? 9600 : clamp(distance * 8, 6200, 9600);
@@ -698,6 +772,7 @@ try {
   const [metadataResponse, terrainResponse] = await Promise.all([fetch(`./luna_view_site${siteId}_data.json`), fetch(`./luna_view_site${siteId}_terrain.bin`)]);
   if (!metadataResponse.ok || !terrainResponse.ok) throw new Error('Could not load site data');
   data = await metadataResponse.json();
+  recalculateEarthHorizon();
   $('height-rms-source').href = data.height_rms_source_url || data.product_url;
   makeTerrain(await terrainResponse.arrayBuffer());
   setMode('surface');

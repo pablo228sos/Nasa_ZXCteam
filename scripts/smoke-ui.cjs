@@ -35,6 +35,22 @@ const server = http.createServer(async (request, response) => {
       assert.ok(layout.pageWidth <= width, `${width}px: horizontal overflow`);
       assert.ok(layout.panelBottom <= layout.dockTop + 1, `${width}px: panel overlaps controls`);
       assert.equal(await page.locator('#find-window').getAttribute('aria-pressed'), 'true');
+      if (width === 390) {
+        await page.locator('[data-antenna="2"]').click();
+        assert.equal(await page.locator('[data-antenna="2"]').getAttribute('aria-pressed'), 'true');
+        assert.match(await page.locator('#antenna-impact').textContent(), /133\/193/);
+        assert.match(page.url(), /antenna=2/);
+        const [download] = await Promise.all([page.waitForEvent('download'), page.locator('#export-hours').click()]);
+        const csv = await fs.readFile(await download.path(), 'utf8');
+        assert.match(csv.split('\n')[0], /antenna_height_m/);
+        assert.equal(csv.split('\n')[1].split(',')[4], '2');
+        assert.match(await page.locator('#earth-horizon').textContent(), /2 m antenna/);
+        await page.locator('#show-why').click();
+        assert.match(await page.locator('#mobile-evidence-label').textContent(), /2 M ANTENNA/);
+        await page.locator('#back-to-result').click();
+        await page.locator('[data-antenna="0"]').click();
+        assert.match(await page.locator('#antenna-impact').textContent(), /95\/193/);
+      }
       if (width === 1440) {
         const pointerTargets = await page.evaluate(() => ['site-choice', 'day-choice'].map(id => {
           const rect = document.getElementById(id).getBoundingClientRect();
