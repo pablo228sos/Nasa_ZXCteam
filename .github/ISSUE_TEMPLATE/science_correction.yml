@@ -1,0 +1,37 @@
+name: Scientific correction
+description: Challenge a data value, calculation, assumption or source attribution.
+title: "[Science] "
+labels: [science]
+body:
+  - type: textarea
+    id: claim
+    attributes:
+      label: Current claim or value
+      description: Include the displayed value and where it appears.
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Site or lunar coordinates
+      placeholder: "Site 07 or 88.7904° S, 123.0402° E"
+    validations:
+      required: true
+  - type: input
+    id: utc
+    attributes:
+      label: UTC time and scenario
+      placeholder: "2026-11-19 10:00 UTC, antenna 0 m"
+  - type: textarea
+    id: source
+    attributes:
+      label: Independent source or calculation
+      description: Link the product, version, coordinate frame and method used for comparison.
+    validations:
+      required: true
+  - type: textarea
+    id: difference
+    attributes:
+      label: Expected result and reproduction steps
+    validations:
+      required: true

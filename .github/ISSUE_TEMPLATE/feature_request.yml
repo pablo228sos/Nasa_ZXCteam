@@ -1,0 +1,28 @@
+name: Product proposal
+description: Propose a user flow, visual improvement or new scientific layer.
+title: "[Proposal] "
+labels: [proposal]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: User need
+      description: What decision or question should this help someone answer?
+    validations:
+      required: true
+  - type: textarea
+    id: behaviour
+    attributes:
+      label: Proposed interaction
+      description: Describe the simplest first-use path and what evidence the user should see.
+    validations:
+      required: true
+  - type: textarea
+    id: data
+    attributes:
+      label: Data and validation needs
+      description: For a scientific claim, identify likely sources, coverage and an independent check.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria

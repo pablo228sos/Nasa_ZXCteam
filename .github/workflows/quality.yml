@@ -1,0 +1,30 @@
+name: Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  science:
+    name: Bundled science and coordinate checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install Node dependencies
+        run: npm ci
+      - name: Verify bundled terrain and ephemeris
+        run: python scripts/verify_site_data.py
+      - name: Verify coordinate and horizon calculations
+        run: npm run test:probe
