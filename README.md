@@ -73,17 +73,7 @@ These are **planned capabilities**, with acceptance criteria in the [implementat
 
 ## How the current system works
 
-```mermaid
-flowchart LR
-    A["NASA LOLA height + total-Z RMS"] --> B["Reproducible data builders"]
-    C["JPL Horizons Sun + Earth positions"] --> B
-    B --> D["Versioned, static site assets"]
-    D --> E["3D terrain + UTC interaction"]
-    D --> F["Local horizon + sensitivity"]
-    E --> G["Explainable result"]
-    F --> G
-    G --> H["Shareable URL + evidence CSV"]
-```
+![NASA LOLA and JPL Horizons feed reproducible assets, browser analysis and source-linked evidence](docs/brand/data-flow.svg)
 
 The reference-site horizon samples 360 directions every 50 m to 8 km. A moved point loads an on-demand 5 m height and RMS grid and recalculates those directions to 6 km. Sun and Earth directions at that point are transformed from bundled JPL Horizons vectors. JPL's API policy does not permit embedding its API directly in a website, so the browser does not call it live. [Architecture →](docs/ARCHITECTURE.md) · [Scientific method →](docs/SCIENCE.md)
 
