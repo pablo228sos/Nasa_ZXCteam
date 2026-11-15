@@ -16,6 +16,14 @@ Measured terrain, the position of the Sun and Earth, and an explanation you can 
 
 ---
 
+## A two-minute walkthrough
+
+1. [Open the lunar atlas](https://pablo228sos.github.io/Nasa_ZXCteam/#terrain). Rotate the Moon or choose a south-pole site. The camera moves into its measured 3D terrain.
+2. In [Site 07](https://pablo228sos.github.io/Nasa_ZXCteam/science/?site=07&find=1), find a Sun-and-Earth window, then reveal the ridge that controls the local horizon.
+3. Move the study point using the guided example or coordinates. Compare the timeline, terrain explanation, and exported evidence.
+
+The four named landmarks are visual atlas stops with USGS links. Local calculations are available for Sites 01, 04, and 07 only. [What works now](#what-is-available-today) · [Scientific limits](docs/SCIENCE.md) · [Planned work](ROADMAP.md).
+
 ## The question
 
 Where on the lunar south pole can a surface mission see sunlight and Earth at the same time, and what terrain creates or removes that opportunity?
@@ -95,8 +103,8 @@ Run the offline data checks and interactive browser checks:
 python -m pip install -r requirements.txt
 python scripts/verify_site_data.py
 python scripts/verify_globe_assets.py
-npm run build:atlas
 npm ci
+npm run build:atlas
 npm run test:probe
 npm run test:ui
 npm run test:probe-ui
